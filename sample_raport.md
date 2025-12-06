@@ -1,29 +1,48 @@
 
 
 ---
-# Podstawy baz danych
+## Dokumentacja projektu "firma produkcyjno-usługowa"
 
+Dzień i godzina zajęć: pt. 9:45
 
-dzień i godz zajęć: (np. wt 13:15) 
+Nr zespołu: 18
 
-nr zespołu: (np. 1)
-
-**Autorzy:** (Imiona i nazwiska autorów)
-
-ew. link do repozytorium git: ...
-
+**Autorzy:** Małgorzata Liskowska, Stanisław Ogonowski, Bartłomiej Wiśniewski
 
 --- 
 
-# 1.	Wymagania i funkcje systemu
+## 1. Wymagania funkcyjne systemu
 
-(np. lista wymagań, doprecyzowanie wymagań, ,np. historyjki użytkownika, np. przypadki użycia itp.,)
+Celem projektu jest projekt bazy danych dla firmy usługowo-produkcyjnej. 
+Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególności do pomieszczeń z urządzeniami komputerowymi.
 
-# 2.	Baza danych
+
+### Persona: klient sklepu
+
+- klient składa zamówienie, znając oczekiwaną datę odbioru. Oczekiwana data reliazacji zamówienia jest obliczona automatycznie na podstawie aktualnych zamówień, stanu magazynu i dostępności części.
+- w przypadku braku części potrzebnych do realizacji zamówienia, do oczekiwanej daty zamówienia dodawany jest także czas potrzebny na sprowadzenie części.
+- klient może mieć dodatkowe uwagi do zamówienia, takie jak docięcie mebli na wymiar, co zwiększa koszt robocizny.
+- klient jest informowany w przypadku, gdy zamówienie jest opóźnione.
+- klient może zadeklarować metodę płatności jako karta/gotówka lub płatność przy odbiorze.
+- klient może otrzymać rabat jednostkowy na całe zamówienie.
+- klientem może być zarówno klient indywidualny jak i zewnętrzna firma.
+- klient może przeglądać produkty po kategoriach.
+
+### Założenia
+
+- konkretna część jest dostarczana przez jednego dostawcę.
+- sklep nie odpowiada za wysyłkę towarów.
+- produkty są składane na poszczególnych liniach produkcyjnych, w zależności od kategorii, do której należą. Na danej linii produkcyjnej mogą być produkowane produkty z wielu kategorii.
+- właściwości produktu, takie jak materiał, czy kolor, są wnioskowane po częściach z jakich produkt jest zrobiony.
+- zawarta jest informacja o maksymalnych mocach przerobowych firmy na konkretnej linii produkcyjnej.
+- na każdej linii produkcyjnej istnieje minimalny poziom produkcji.
+- w przypadku braku zamówień mogą to być produkty najczęściej kupowane.
+
+## 2. Baza danych
 
 ## Schemat bazy danych
 
-(diagram (rysunek) przedstawiający schemat bazy danych) 
+![Schemat bazy danych](schemat_bazy_2.png)
 
 ## Opis poszczególnych tabel
 
@@ -33,10 +52,13 @@ ew. link do repozytorium git: ...
 - kod DDL 
 
 ```sql
-create table tab1 (
-   a int,
-   b varchar(10)
-)
+CREATE TABLE Product (
+   ProductId int  NOT NULL,
+   ProductName varchar(40)  NOT NULL,
+   CategoryID int  NOT NULL,
+   ProductionTime int  NOT NULL,
+   CONSTRAINT ProductId PRIMARY KEY  (ProductId)
+);
 ```
 
 - Opis: (opis tabeli, komentarz)
