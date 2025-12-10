@@ -91,7 +91,7 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | adress        | varchar(100) |        | Ulica i numer budynku                                                       |
 | city          | varchar(100) |        | Miasto siedziby firmy                                                       |
 | region        | varchar(100) |        | Województwo/stan/land                                                       |
-| postal_code   | int ?!       |        | Kod pocztowy                                                                |
+| postal_code   | varchar (10)      |        | Kod pocztowy                                                                |
 | country       | varchar(50)  |        | Kraj                                                                        |
 | delivery_time | int          |        | Średni oczekiwany czas dostawy (do oszacowania czasu realizacji zamówienia) |
 
@@ -138,9 +138,9 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | delivery_date | date          |        | Rzeczywista data dostarczenia zamówienia   |
 | payment_type  | varchar(50)   |        | Typ płatności                              |
 | discount      | decimal(10,2) |        | Zniżka na całe zamówienie                  |
-| paid          | tinyint       |        | ???                                        |
+| paid          | bit       |        | Określa, czy klient zapłacił za zamówienie                                        |
 
-[comment]: <> (Czym jest paid i dlaczego jest tinyint xd. Czy discount nie lepiej zrobić w procentach? Czy delivery_date to dobra nazwa? My nie zajmujemy się wysyłką. Nie lepiej sent_date czy coś)
+[comment]: <> (Czy discount nie lepiej zrobić w procentach? Czy delivery_date to dobra nazwa? My nie zajmujemy się wysyłką. Nie lepiej sent_date czy coś)
 
 ### OrderDetails
 
@@ -160,15 +160,15 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | Kolumna       | Typ          | Klucz  | Opis/Uwagi                                           |
 | ------------- | ------------ | ------ | ---------------------------------------------------- |
 | customer_id   | int          | główny | Identyfikator klienta                                |
-| adress        | int ?!!!!    |        | Ulica i numer budynku                                |
+| adress        | varchar (100)    |        | Ulica i numer budynku                                |
 | city          | varchar(100) |        | Miasto siedziby klienta/ Miasto zamieszkania klienta |
 | region        | varchar(100) |        | Województwo/stan/land                                |
 | country       | varchar(50)  |        | Kraj                                                 |
-| postal_code   | int ?!       |        | Kod pocztowy                                         |
+| postal_code   | varchar(10)       |        | Kod pocztowy                                         |
 | contact_email | varchar(100) |        | Email                                                |
-| phone         | int ?!       |        | Numer telefonu                                       |
+| phone         | varchar (12)       |        | Numer telefonu                                       |
 
-[comment]: <> (te typy są delikatnie mówiąc niedopracowane xd)
+[comment]: <> (typy powinny być już dopracowane)
 
 ### IndividualCustomer
 
