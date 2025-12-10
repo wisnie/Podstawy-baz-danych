@@ -45,8 +45,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 
 ### Product
 
-[comment]: <> (czy nie powinniśmy zmienić nazwy tabel na product_part, order_details itp. żeby się zgadzały z konwencją kolumn?)
-
 | Kolumna         | Typ         | Klucz  | Opis/Uwagi                                            |
 | --------------- | ----------- | ------ | ----------------------------------------------------- |
 | product_id      | int         | główny | Identyfikator produktu                                |
@@ -78,10 +76,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | units_in_order | int          |        | Liczba części zamówionych (w drodze)                    |
 | reorder_level  | int          |        | Liczba units_in_stock przy której należy domówić części |
 
-[comment]: <> (Proponuję dodać liczbę w której zazwyczaj będziemy domawiać części. Wiemy, że przy reorder_level domawiamy części, ale ile?)
-
-[comment]: <> (Usiadłabym jeszcze przy liczbie znaków w varcharach w poszczególnych kolumnach. Dlaczego nazwa częsci może mieć 100 znaków, ale nazwa produktu tylko 40? xd)
-
 ### Supplier
 
 | Kolumna       | Typ          | Klucz  | Opis/Uwagi                                                                  |
@@ -95,8 +89,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | country       | varchar(50)  |        | Kraj                                                                        |
 | delivery_time | int          |        | Średni oczekiwany czas dostawy (do oszacowania czasu realizacji zamówienia) |
 
-[comment]: <> (ogarnąć varchare + dlaczego kod pocztowy to int + delivery_time mi sie nie podoba. Czy jak zamówimy 100000 śróbek to czas realizacji zamówienia to tyle co 1 śróbka? Imo trzeba dodać jakieś orders i order_details dla rzeczy które MY zamawiamy. Dodałabym phone i contact_email jak w customers)
-
 ### Category
 
 | Kolumna       | Typ         | Klucz  | Opis/Uwagi               |
@@ -104,8 +96,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | category_id   | int         | główny | Identyfikator kategorii  |
 | assembly_line | int         | obcy   | Numer taśmy produkcyjnej |
 | category_name | varchar(50) |        | Nazwa kategorii          |
-
-[comment]: <> (Czysto kosmetycznie przeniosłabym nazwę kategorii nad assembly_line)
 
 ### Production
 
@@ -116,8 +106,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | quantity             | int      |              | Liczba wyprodukowanego produktu w danej partii |
 | production_startdate | datetime |              | Start produkcji                                |
 | production_enddate   | datetime |              | Koniec produkcji                               |
-
-[comment]: <> (zamiana nazwy na production_start_date, production_end_date. Może jakiś numer partii? Co z wadliwymi produkatami?)
 
 ### AssemblyLines
 
@@ -140,8 +128,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | discount      | decimal(10,2) |        | Zniżka na całe zamówienie                  |
 | paid          | bit       |        | Określa, czy klient zapłacił za zamówienie                                        |
 
-[comment]: <> (Czy discount nie lepiej zrobić w procentach? Czy delivery_date to dobra nazwa? My nie zajmujemy się wysyłką. Nie lepiej sent_date czy coś)
-
 ### OrderDetails
 
 | Kolumna            | Typ          | Klucz        | Opis/Uwagi                         |
@@ -153,7 +139,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | quantity           | int          |              | Liczba zamówionych sztuk           |
 | extra_remarks      | varchar(200) |              | Uwagi dodatkowe                    |
 
-[comment]: <> (Co się stanie jak w extra_remarks będzie preferencja żeby stół był inaczej docięty? jak to jest egzekwowane na produkcji? bo na razie srak chyba)
 
 ### Customers
 
@@ -168,7 +153,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | contact_email | varchar(100) |        | Email                                                |
 | phone         | varchar (12)       |        | Numer telefonu                                       |
 
-[comment]: <> (typy powinny być już dopracowane)
 
 ### IndividualCustomer
 
@@ -189,8 +173,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | contact_person_surname | varchar(100) |              | Nazwisko osoby kontaktowej |
 | nip_number             | int          |              | Numer NIP firmy            |
 
-[comment]: <> (email dałabym do Customers. Usunełabym contact osobe. Na chuj. Telefon wystarczy)
-
 ### Warehouse
 
 | Kolumna           | Typ | Klucz        | Opis/Uwagi                                                                           |
@@ -199,8 +181,6 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | quantity_on_stock | int |              | Liczba sztuk na magazynie                                                            |
 | sector            | int |              | Sektor w magazynie, przy którym znajduje się produkt                                 |
 | production_level  | int |              | Liczba sztuk produktu do której dąży się w przypadku mniejszych obrotów na produkcji |
-
-[comment]: <> (czy ten sektor jest nam potrzebny? Czy w product_id klucz ma być obcy?)
 
 (Dla każdej tabeli kod DDL wraz z zaimplementowanymi war. integralności, + ewentualnie opis, np. w formie tabelki)
 
