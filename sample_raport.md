@@ -1,5 +1,3 @@
-
-
 ---
 ## Dokumentacja projektu "firma produkcyjno-usługowa"
 
@@ -9,13 +7,12 @@ Nr zespołu: 18
 
 **Autorzy:** Małgorzata Liskowska, Stanisław Ogonowski, Bartłomiej Wiśniewski
 
---- 
+---
 
 ## 1. Wymagania funkcyjne systemu
 
-Celem projektu jest projekt bazy danych dla firmy usługowo-produkcyjnej. 
+Celem projektu jest projekt bazy danych dla firmy usługowo-produkcyjnej.
 Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególności do pomieszczeń z urządzeniami komputerowymi.
-
 
 ### Persona: klient sklepu
 
@@ -46,10 +43,168 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 
 ## Opis poszczególnych tabel
 
-(Dla każdej tabeli  kod DDL wraz z zaimplementowanymi war. integralności, + ewentualnie opis, np. w formie tabelki)
+### Product
 
+[comment]: <> (czy nie powinniśmy zmienić nazwy tabel na product_part, order_details itp. żeby się zgadzały z konwencją kolumn?)
 
-- kod DDL 
+| Kolumna         | Typ         | Klucz  | Opis/Uwagi                                            |
+| --------------- | ----------- | ------ | ----------------------------------------------------- |
+| product_id      | int         | główny | Identyfikator produktu                                |
+| product_name    | varchar(40) |        | Nazwa produktu                                        |
+| category_id     | int         | obcy   | Identyfikator kategorii                               |
+| production_time | int         |        | Czas potrzebny do produkcji jednej jednostki produktu |
+| width           | int         |        | Szerokość produktu (w cm)                             |
+| height          | int         |        | Wysokość produktu (w cm)                              |
+| depth           | int         |        | Długość produktu (w cm)                               |
+| weight          | int         |        | Waga produktu (w kg)                                  |
+
+### ProductPart
+
+| Kolumna    | Typ | Klucz        | Opis/Uwagi                                                                                           |
+| ---------- | --- | ------------ | ---------------------------------------------------------------------------------------------------- |
+| product_id | int | główny, obcy | Identyfikator produktu                                                                               |
+| part_id    | int | główny, obcy | Identyfikator części potrzebnej do produkcji produktu o identyfikatorze product_id                   |
+| quantity   | int |              | Liczba części o identyfikatorze part_id potrzebna do produkcji produktu o identyfikatorze product_id |
+
+### Part
+
+| Kolumna        | Typ          | Klucz  | Opis/Uwagi                                              |
+| -------------- | ------------ | ------ | ------------------------------------------------------- |
+| part_id        | int          | główny | Identyfikator części                                    |
+| part_name      | varchar(100) |        | Nazwa części                                            |
+| part_cost      | money        |        | Cena jednostkowa części                                 |
+| supplier_id    | int          | obcy   | Identyfikator dostawcy                                  |
+| units_in_stock | int          |        | Liczba części w magazynie                               |
+| units_in_order | int          |        | Liczba części zamówionych (w drodze)                    |
+| reorder_level  | int          |        | Liczba units_in_stock przy której należy domówić części |
+
+[comment]: <> (Proponuję dodać liczbę w której zazwyczaj będziemy domawiać części. Wiemy, że przy reorder_level domawiamy części, ale ile?)
+
+[comment]: <> (Usiadłabym jeszcze przy liczbie znaków w varcharach w poszczególnych kolumnach. Dlaczego nazwa częsci może mieć 100 znaków, ale nazwa produktu tylko 40? xd)
+
+### Supplier
+
+| Kolumna       | Typ          | Klucz  | Opis/Uwagi                                                                  |
+| ------------- | ------------ | ------ | --------------------------------------------------------------------------- |
+| supplier_id   | int          | główny | Identyfikator dostawcy                                                      |
+| name          | varchar(50)  |        | Nazwa firmy dostarczającej części                                           |
+| adress        | varchar(100) |        | Ulica i numer budynku                                                       |
+| city          | varchar(100) |        | Miasto siedziby firmy                                                       |
+| region        | varchar(100) |        | Województwo/stan/land                                                       |
+| postal_code   | int ?!       |        | Kod pocztowy                                                                |
+| country       | varchar(50)  |        | Kraj                                                                        |
+| delivery_time | int          |        | Średni oczekiwany czas dostawy (do oszacowania czasu realizacji zamówienia) |
+
+[comment]: <> (ogarnąć varchare + dlaczego kod pocztowy to int + delivery_time mi sie nie podoba. Czy jak zamówimy 100000 śróbek to czas realizacji zamówienia to tyle co 1 śróbka? Imo trzeba dodać jakieś orders i order_details dla rzeczy które MY zamawiamy. Dodałabym phone i contact_email jak w customers)
+
+### Category
+
+| Kolumna       | Typ         | Klucz  | Opis/Uwagi               |
+| ------------- | ----------- | ------ | ------------------------ |
+| category_id   | int         | główny | Identyfikator kategorii  |
+| assembly_line | int         | obcy   | Numer taśmy produkcyjnej |
+| category_name | varchar(50) |        | Nazwa kategorii          |
+
+[comment]: <> (Czysto kosmetycznie przeniosłabym nazwę kategorii nad assembly_line)
+
+### Production
+
+| Kolumna              | Typ      | Klucz        | Opis/Uwagi                                     |
+| -------------------- | -------- | ------------ | ---------------------------------------------- |
+| assembly_line        | int      | główny, obcy | Numer taśmy produkcyjnej                       |
+| product_id           | int      | główny, obcy | Identyfikator produktu                         |
+| quantity             | int      |              | Liczba wyprodukowanego produktu w danej partii |
+| production_startdate | datetime |              | Start produkcji                                |
+| production_enddate   | datetime |              | Koniec produkcji                               |
+
+[comment]: <> (zamiana nazwy na production_start_date, production_end_date. Może jakiś numer partii? Co z wadliwymi produkatami?)
+
+### AssemblyLines
+
+| Kolumna        | Typ | Klucz  | Opis/Uwagi                                                      |
+| -------------- | --- | ------ | --------------------------------------------------------------- |
+| assembly_line  | int | główny | Numer taśmy produkcyjnej                                        |
+| min_capability | int |        | Minimalna liczba produktów wytwarzanych na taśmie w ciągu dnia  |
+| max_capability | int |        | Maksymalna liczba produktów wytwarzanych na taśmie w ciągu dnia |
+
+### Orders
+
+| Kolumna       | Typ           | Klucz  | Opis/Uwagi                                 |
+| ------------- | ------------- | ------ | ------------------------------------------ |
+| order_id      | int           | główny | Identyfikator zamówienia                   |
+| customer_id   | int           | obcy   | Identyfikator klienta                      |
+| order_date    | date          |        | Data złożenia zamówienia                   |
+| required_date | date          |        | Zadeklarowana data dostarczenia zamówienia |
+| delivery_date | date          |        | Rzeczywista data dostarczenia zamówienia   |
+| payment_type  | varchar(50)   |        | Typ płatności                              |
+| discount      | decimal(10,2) |        | Zniżka na całe zamówienie                  |
+| paid          | tinyint       |        | ???                                        |
+
+[comment]: <> (Czym jest paid i dlaczego jest tinyint xd. Czy discount nie lepiej zrobić w procentach? Czy delivery_date to dobra nazwa? My nie zajmujemy się wysyłką. Nie lepiej sent_date czy coś)
+
+### OrderDetails
+
+| Kolumna            | Typ          | Klucz        | Opis/Uwagi                         |
+| ------------------ | ------------ | ------------ | ---------------------------------- |
+| order_id           | int          | główny, obcy | Identyfikator zamówienia           |
+| product_id         | int          | główny, obcy | Identyfikator produktu             |
+| manufactoring_cost | money        |              | Koszt wyprodukowania jednej sztuki |
+| unit_price         | money        |              | Cena za sztukę                     |
+| quantity           | int          |              | Liczba zamówionych sztuk           |
+| extra_remarks      | varchar(200) |              | Uwagi dodatkowe                    |
+
+[comment]: <> (Co się stanie jak w extra_remarks będzie preferencja żeby stół był inaczej docięty? jak to jest egzekwowane na produkcji? bo na razie srak chyba)
+
+### Customers
+
+| Kolumna       | Typ          | Klucz  | Opis/Uwagi                                           |
+| ------------- | ------------ | ------ | ---------------------------------------------------- |
+| customer_id   | int          | główny | Identyfikator klienta                                |
+| adress        | int ?!!!!    |        | Ulica i numer budynku                                |
+| city          | varchar(100) |        | Miasto siedziby klienta/ Miasto zamieszkania klienta |
+| region        | varchar(100) |        | Województwo/stan/land                                |
+| country       | varchar(50)  |        | Kraj                                                 |
+| postal_code   | int ?!       |        | Kod pocztowy                                         |
+| contact_email | varchar(100) |        | Email                                                |
+| phone         | int ?!       |        | Numer telefonu                                       |
+
+[comment]: <> (te typy są delikatnie mówiąc niedopracowane xd)
+
+### IndividualCustomer
+
+| Kolumna           | Typ         | Klucz        | Opis/Uwagi            |
+| ----------------- | ----------- | ------------ | --------------------- |
+| customer_id       | int         | główny, obcy | Identyfikator klienta |
+| name              | varchar(50) |              | Imię klienta          |
+| surname           | varchar(50) |              | Nazwisko klienta      |
+| title_of_courtesy | varchar(20) |              | Pan/Pani              |
+
+### CompanyCustomer
+
+| Kolumna                | Typ          | Klucz        | Opis/Uwagi                 |
+| ---------------------- | ------------ | ------------ | -------------------------- |
+| customer_id            | int          | główny, obcy | Identyfikator klienta      |
+| company_name           | varchar(50)  |              | Nazwa firmy                |
+| contact_person_name    | varchar(100) |              | Imię osoby kontaktowej     |
+| contact_person_surname | varchar(100) |              | Nazwisko osoby kontaktowej |
+| nip_number             | int          |              | Numer NIP firmy            |
+
+[comment]: <> (email dałabym do Customers. Usunełabym contact osobe. Na chuj. Telefon wystarczy)
+
+### Warehouse
+
+| Kolumna           | Typ | Klucz        | Opis/Uwagi                                                                           |
+| ----------------- | --- | ------------ | ------------------------------------------------------------------------------------ |
+| product_id        | int | główny, obcy | Identyfikator produktu                                                               |
+| quantity_on_stock | int |              | Liczba sztuk na magazynie                                                            |
+| sector            | int |              | Sektor w magazynie, przy którym znajduje się produkt                                 |
+| production_level  | int |              | Liczba sztuk produktu do której dąży się w przypadku mniejszych obrotów na produkcji |
+
+[comment]: <> (czy ten sektor jest nam potrzebny? Czy w product_id klucz ma być obcy?)
+
+(Dla każdej tabeli kod DDL wraz z zaimplementowanymi war. integralności, + ewentualnie opis, np. w formie tabelki)
+
+- kod DDL
 
 ```sql
 CREATE TABLE Product (
@@ -69,19 +224,17 @@ CREATE TABLE Product (
 | Atrybut 1 …    |     |            |
 | Atrybut 2 …    |     |            |
 
-# 3.  Widoki, procedury/funkcje, triggery 
-
+# 3. Widoki, procedury/funkcje, triggery
 
 ## Widoki
 
 (dla każdego widoku należy wkleić kod polecenia definiującego widok wraz z komentarzem)
 
 ```sql
-crete or alter view vw_abc 
+crete or alter view vw_abc
 as
 select a from tab1
 ```
-
 
 ## Procedury/funkcje
 
@@ -98,7 +251,6 @@ select a from tab1
 ```sql
 -- ...
 ```
-
 
 # 4. Inne
 
