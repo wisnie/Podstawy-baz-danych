@@ -29,10 +29,14 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 ### Założenia
 
 - konkretna część jest dostarczana przez jednego dostawcę.
+- koszt pracy linii produkcyjnych jest niezależny od liczby produktów.
+- umowy z dostawcami są podpisywane z góry na cały rok.
 - sklep nie odpowiada za wysyłkę towarów.
 - produkty są składane na poszczególnych zespołach linii produkcyjnych, w zależności od kategorii, do której należą. Na danym zespole linii produkcyjnych mogą być produkowane produkty z wielu kategorii.
 - zawarta jest informacja o maksymalnych mocach przerobowych firmy na konkretnym zestawie linii produkcyjnych.
 - na każdym zestawie linii produkcyjnych istnieje minimalny poziom produkcji.
+- sklep domawia części na magazyn, jeśli na magazynie jest mniej niż 10% docelowej wartości.
+- w przypadku braku części na zamówienie sklep domawia je w taki sposób, aby wciąż osiągać określony cel.
 - na podstawie aktualnych zamówień ustalana jest kolejka, na podstawie której produkowane są poszczególne produkty.
 - w przypadku braku zamówień sklep dąży do określonego poziomu danego produktu na magazynie.
 - klient może modyfikować swoje zamówienie:
@@ -55,11 +59,11 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | --------------- | ----------- | ------ | ----------------------------------------------------- |
 | product_id      | int         | główny | Identyfikator produktu                                |
 | product_name    | nvarchar(100) |        | Nazwa produktu                                        |
-| manufactoring_cost      | money         |    | Koszt wyprodukowania jednej sztuki  
+| manufactoring_cost      | money         |    | Koszt wyprodukowania jednej sztuki (włącznie z częściami)  
 | category_id     | int         | obcy   | Identyfikator kategorii                               |
 | production_time_unit | int         |        | Jednostka określająca całkowitą liczbę jednostek czasu, w której produkowany jest dany produkt. 10 jednostek to jedna roboczogodzina na taśmie produkcyjnej. |
 | quantity_on_stock | int |              | Liczba sztuk na magazynie                                                            |
-| warehousse_sector            | int |              | Sektor w magazynie, przy którym znajduje się produkt                                 |
+| warehouse_sector            | int |              | Sektor w magazynie, przy którym znajduje się produkt                                 |
 | production_level  | int |              | Liczba sztuk produktu do której dąży się w przypadku mniejszych obrotów na produkcji |
 
 ### ProductParts
@@ -120,7 +124,7 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | production_id           | int      | główny | Identyfikator produkcji  
 | product_id           | int      | główny, obcy | Identyfikator produktu                         |
 | assembly_line        | int      | główny, obcy | Numer taśmy produkcyjnej                       |                       |
-| manufactoring_cost      | money         |    | Koszt wyprodukowania jednej sztuki  
+| manufactoring_cost      | money         |    | Koszt wyprodukowania jednej sztuki (włącznie z częściami - koszt ten może się zmieniać z biegiem czasu)  
 | quantity             | int      |              | Liczba wyprodukowanego produktu w danej partii |
 | production_startdate | datetime |              | Data rozpoczęcia produkcji                                |
 | production_enddate   | datetime |              | Data zakończenia produkcji                               |
@@ -132,7 +136,7 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | order_id      | int           | główny | Identyfikator zamówienia                   |
 | customer_id   | int           | obcy   | Identyfikator klienta                      |
 | order_date    | date          |        | Data złożenia zamówienia                   |
-| required_date | date          |        | Zadeklarowana data dostarczenia zamówienia |
+| estimated_date | date          |        | Zadeklarowana data dostarczenia zamówienia |
 | delivery_date | date          |        | Rzeczywista data dostarczenia zamówienia   |
 | discount      | decimal(5,4) |        | Zniżka na całe zamówienie                  ||
 
