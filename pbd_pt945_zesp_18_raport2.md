@@ -1,4 +1,3 @@
----
 ## Dokumentacja projektu "firma produkcyjno-usługowa"
 
 Dzień i godzina zajęć: pt. 9:45
@@ -6,8 +5,6 @@ Dzień i godzina zajęć: pt. 9:45
 Nr zespołu: 18
 
 **Autorzy:** Małgorzata Liskowska, Stanisław Ogonowski, Bartłomiej Wiśniewski
-
----
 
 ## 1. Wymagania funkcyjne systemu
 
