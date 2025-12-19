@@ -59,9 +59,10 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | manufactoring_cost      | money         |    | Koszt wyprodukowania jednej sztuki (włącznie z częściami)  
 | category_id     | int         | obcy   | Identyfikator kategorii                               |
 | production_time_unit | int         |        | Jednostka określająca całkowitą liczbę jednostek czasu, w której produkowany jest dany produkt. 10 jednostek to jedna roboczogodzina na taśmie produkcyjnej. |
-| quantity_on_stock | int |              | Liczba sztuk na magazynie                                                            |
+| quantity_in_stock | int |              | Liczba sztuk na magazynie                                                            |
 | warehouse_sector            | int |              | Sektor w magazynie, przy którym znajduje się produkt                                 |
 | production_level  | int |              | Liczba sztuk produktu do której dąży się w przypadku mniejszych obrotów na produkcji |
+| discontinued  | bit          |        | Określa, czy część została wycofana |
 
 ### ProductParts
 
@@ -82,6 +83,7 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | units_in_stock | int          |        | Liczba części w magazynie                               |
 | units_on_order | int          |        | Liczba części zamówionych (w drodze)                    |
 | reorder_level  | int          |        | Liczba units_in_stock przy której należy domówić części |
+| discontinued  | bit          |        | Określa, czy część została wycofana |
 
 ### Suppliers
 
@@ -136,6 +138,7 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | estimated_date | date          |        | Zadeklarowana data dostarczenia zamówienia |
 | delivery_date | date          |        | Rzeczywista data dostarczenia zamówienia   |
 | discount      | decimal(5,4) |        | Zniżka na całe zamówienie                  ||
+| order_status      | nvarchar(5) |        | Aktualny status zamówienia                 ||
 
 ### OrderDetails
 
