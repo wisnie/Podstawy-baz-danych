@@ -1,5 +1,16 @@
 USE u_bawisnie;
 
+-- Table: Calendar
+CREATE TABLE dbo.Calendar
+(
+    date DATE PRIMARY KEY,
+    day_of_week TINYINT  NOT NULL,
+    is_weekend BIT  NOT NULL,
+    is_national_holiday BIT  NOT NULL,
+    holiday_name  NVARCHAR(50) NULL
+);
+
+
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
     assembly_line int  NOT NULL IDENTITY CHECK (assembly_line >= 0),
@@ -62,7 +73,7 @@ CREATE TABLE Order_Details (
     order_id int  NOT NULL,
     product_id int  NOT NULL,
     quantity int  NOT NULL CHECK (quantity > 0),
-    unit_price money  NOT NULL CHECK (unit_price >= 0),
+    unit_price money  NOT NULL CHECK (unit_price > 0),
     extra_remarks nvarchar(200)  NULL,
     CONSTRAINT Order_Details_pk PRIMARY KEY  (order_id,product_id)
 );
@@ -70,13 +81,11 @@ CREATE TABLE Order_Details (
 -- Table: Orders
 CREATE TABLE Orders (
     order_id int  NOT NULL IDENTITY,
-
     customer_id int  NOT NULL,
     order_date date  NOT NULL,
     estimated_date date  NOT NULL,
     delivery_date date  NULL,
     discount decimal(5,4)  NOT NULL CHECK (discount BETWEEN 0 AND 1 ),
-    order_status NVARCHAR(5) NOT NULL,
     CONSTRAINT required_date_after_order CHECK (estimated_date >= order_date),
     CONSTRAINT delivery_date_after_order CHECK (delivery_date >= order_date),
     CONSTRAINT Orders_pk PRIMARY KEY  (order_id)
@@ -91,14 +100,13 @@ CREATE TABLE Parts (
     units_in_stock int  NOT NULL CHECK (units_in_stock >= 0),
     units_on_order int  NOT NULL CHECK (units_on_order >= 0),
     reorder_level int  NOT NULL CHECK (reorder_level >= 0),
-    discontinued bit NOT NULL,
     CONSTRAINT Parts_pk PRIMARY KEY  (part_id)
 );
 
 -- Table: Payments
 CREATE TABLE Payments (
     order_id int  NOT NULL,
-    paid_amount money  NOT NULL CHECK (paid_amount >= 0),
+    paid_amount money  NOT NULL CHECK (paid_amount > 0),
     payment_type nvarchar(20)  NOT NULL,
     payment_date datetime  NOT NULL,
     CONSTRAINT Payments_pk PRIMARY KEY  (order_id)
@@ -134,10 +142,9 @@ CREATE TABLE Products (
     unit_price money NOT NULL CHECK (unit_price >= 0),
     category_id int  NOT NULL,
     production_time_unit int  NOT NULL CHECK (production_time_unit >= 0),
-    quantity_in_stock int  NOT NULL CHECK (quantity_in_stock >= 0),
+    quantity_on_stock int  NOT NULL CHECK (quantity_on_stock >= 0),
     warehouse_sector int  NOT NULL CHECK (warehouse_sector >=0),
     production_level int  NOT NULL CHECK (production_level >= 0),
-    discontinued bit NOT NULL,
     CONSTRAINT Products_pk PRIMARY KEY  (product_id)
 );
 

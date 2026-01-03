@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>pbd_pt945_zesp_18_raport1</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h2 id="dokumentacja-projektu-firma-produkcyjno-usługowa">Dokumentacja
+projektu “firma produkcyjno-usługowa”</h2>
+<p>Dzień i godzina zajęć: pt. 9:45</p>
+<p>Nr zespołu: 18</p>
+<p><strong>Autorzy:</strong> Małgorzata Liskowska, Stanisław Ogonowski,
+Bartłomiej Wiśniewski</p>
+<h2 id="wymagania-funkcyjne-systemu">1. Wymagania funkcyjne systemu</h2>
+<p>Celem projektu jest projekt bazy danych dla firmy
+usługowo-produkcyjnej. Klient biznesowy specjalizuje się w produkcji
+mebli biurowych, w szczególności do pomieszczeń z urządzeniami
+komputerowymi.</p>
+<h3 id="persona-klient-sklepu">Persona: klient sklepu</h3>
+<ul>
+<li>klient składa zamówienie, znając oczekiwaną datę odbioru. Oczekiwana
+data reliazacji zamówienia jest obliczona automatycznie na podstawie
+aktualnych zamówień, stanu magazynu i dostępności części.</li>
+<li>w przypadku braku części potrzebnych do realizacji zamówienia, do
+oczekiwanej daty zamówienia dodawany jest także czas potrzebny na
+sprowadzenie części.</li>
+<li>klient może mieć dodatkowe uwagi do zamówienia, takie jak docięcie
+mebli na wymiar, co zwiększa koszt robocizny.</li>
+<li>klient jest informowany w przypadku, gdy zamówienie jest
+opóźnione.</li>
+<li>klient może zadeklarować metodę płatności jako karta/gotówka lub
+płatność przy odbiorze.</li>
+<li>klient może otrzymać rabat jednostkowy na całe zamówienie.</li>
+<li>klientem może być zarówno klient indywidualny jak i zewnętrzna
+firma.</li>
+<li>klient może przeglądać produkty po kategoriach.</li>
+</ul>
+<h3 id="założenia">Założenia</h3>
+<ul>
+<li>konkretna część jest dostarczana przez jednego dostawcę.</li>
+<li>sklep nie odpowiada za wysyłkę towarów.</li>
+<li>produkty są składane na poszczególnych liniach produkcyjnych, w
+zależności od kategorii, do której należą. Na danej linii produkcyjnej
+mogą być produkowane produkty z wielu kategorii.</li>
+<li>właściwości produktu, takie jak materiał, czy kolor, są wnioskowane
+po częściach z jakich produkt jest zrobiony.</li>
+<li>zawarta jest informacja o maksymalnych mocach przerobowych firmy na
+konkretnej linii produkcyjnej.</li>
+<li>na każdej linii produkcyjnej istnieje minimalny poziom
+produkcji.</li>
+<li>w przypadku braku zamówień mogą to być produkty najczęściej
+kupowane.</li>
+</ul>
+<h2 id="baza-danych">2. Baza danych</h2>
+<h2 id="schemat-bazy-danych">Schemat bazy danych</h2>
+<figure>
+<img src="schemat_bazy_2.png" alt="Schemat bazy danych" />
+<figcaption aria-hidden="true">Schemat bazy danych</figcaption>
+</figure>
+<h2 id="opis-poszczególnych-tabel">Opis poszczególnych tabel</h2>
+<h3 id="product">Product</h3>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 12%" />
+<col style="width: 7%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>product_id</td>
+<td>int</td>
+<td>główny</td>
+<td>Identyfikator produktu</td>
+</tr>
+<tr>
+<td>product_name</td>
+<td>varchar(40)</td>
+<td></td>
+<td>Nazwa produktu</td>
+</tr>
+<tr>
+<td>category_id</td>
+<td>int</td>
+<td>obcy</td>
+<td>Identyfikator kategorii</td>
+</tr>
+<tr>
+<td>production_time</td>
+<td>int</td>
+<td></td>
+<td>Czas potrzebny do produkcji jednej jednostki produktu</td>
+</tr>
+<tr>
+<td>width</td>
+<td>int</td>
+<td></td>
+<td>Szerokość produktu (w cm)</td>
+</tr>
+<tr>
+<td>height</td>
+<td>int</td>
+<td></td>
+<td>Wysokość produktu (w cm)</td>
+</tr>
+<tr>
+<td>depth</td>
+<td>int</td>
+<td></td>
+<td>Długość produktu (w cm)</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>int</td>
+<td></td>
+<td>Waga produktu (w kg)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="productpart">ProductPart</h3>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 2%" />
+<col style="width: 9%" />
+<col style="width: 80%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>product_id</td>
+<td>int</td>
+<td>główny, obcy</td>
+<td>Identyfikator produktu</td>
+</tr>
+<tr>
+<td>part_id</td>
+<td>int</td>
+<td>główny, obcy</td>
+<td>Identyfikator części potrzebnej do produkcji produktu o
+identyfikatorze product_id</td>
+</tr>
+<tr>
+<td>quantity</td>
+<td>int</td>
+<td></td>
+<td>Liczba części o identyfikatorze part_id potrzebna do produkcji
+produktu o identyfikatorze product_id</td>
+</tr>
+</tbody>
+</table>
+<h3 id="part">Part</h3>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 13%" />
+<col style="width: 6%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>part_id</td>
+<td>int</td>
+<td>główny</td>
+<td>Identyfikator części</td>
+</tr>
+<tr>
+<td>part_name</td>
+<td>varchar(100)</td>
+<td></td>
+<td>Nazwa części</td>
+</tr>
+<tr>
+<td>part_cost</td>
+<td>money</td>
+<td></td>
+<td>Cena jednostkowa części</td>
+</tr>
+<tr>
+<td>supplier_id</td>
+<td>int</td>
+<td>obcy</td>
+<td>Identyfikator dostawcy</td>
+</tr>
+<tr>
+<td>units_in_stock</td>
+<td>int</td>
+<td></td>
+<td>Liczba części w magazynie</td>
+</tr>
+<tr>
+<td>units_in_order</td>
+<td>int</td>
+<td></td>
+<td>Liczba części zamówionych (w drodze)</td>
+</tr>
+<tr>
+<td>reorder_level</td>
+<td>int</td>
+<td></td>
+<td>Liczba units_in_stock przy której należy domówić części</td>
+</tr>
+</tbody>
+</table>
+<h3 id="supplier">Supplier</h3>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 11%" />
+<col style="width: 5%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>supplier_id</td>
+<td>int</td>
+<td>główny</td>
+<td>Identyfikator dostawcy</td>
+</tr>
+<tr>
+<td>name</td>
+<td>varchar(50)</td>
+<td></td>
+<td>Nazwa firmy dostarczającej części</td>
+</tr>
+<tr>
+<td>adress</td>
+<td>varchar(100)</td>
+<td></td>
+<td>Ulica i numer budynku</td>
+</tr>
+<tr>
+<td>city</td>
+<td>varchar(100)</td>
+<td></td>
+<td>Miasto siedziby firmy</td>
+</tr>
+<tr>
+<td>region</td>
+<td>varchar(100)</td>
+<td></td>
+<td>Województwo/stan/land</td>
+</tr>
+<tr>
+<td>postal_code</td>
+<td>varchar (10)</td>
+<td></td>
+<td>Kod pocztowy</td>
+</tr>
+<tr>
+<td>country</td>
+<td>varchar(50)</td>
+<td></td>
+<td>Kraj</td>
+</tr>
+<tr>
+<td>delivery_time</td>
+<td>int</td>
+<td></td>
+<td>Średni oczekiwany czas dostawy (do oszacowania czasu realizacji
+zamówienia)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="category">Category</h3>
+<table>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>category_id</td>
+<td>int</td>
+<td>główny</td>
+<td>Identyfikator kategorii</td>
+</tr>
+<tr>
+<td>assembly_line</td>
+<td>int</td>
+<td>obcy</td>
+<td>Numer taśmy produkcyjnej</td>
+</tr>
+<tr>
+<td>category_name</td>
+<td>varchar(50)</td>
+<td></td>
+<td>Nazwa kategorii</td>
+</tr>
+</tbody>
+</table>
+<h3 id="production">Production</h3>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 9%" />
+<col style="width: 13%" />
+<col style="width: 53%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>assembly_line</td>
+<td>int</td>
+<td>główny, obcy</td>
+<td>Numer taśmy produkcyjnej</td>
+</tr>
+<tr>
+<td>product_id</td>
+<td>int</td>
+<td>główny, obcy</td>
+<td>Identyfikator produktu</td>
+</tr>
+<tr>
+<td>quantity</td>
+<td>int</td>
+<td></td>
+<td>Liczba wyprodukowanego produktu w danej partii</td>
+</tr>
+<tr>
+<td>production_startdate</td>
+<td>datetime</td>
+<td></td>
+<td>Start produkcji</td>
+</tr>
+<tr>
+<td>production_enddate</td>
+<td>datetime</td>
+<td></td>
+<td>Koniec produkcji</td>
+</tr>
+</tbody>
+</table>
+<h3 id="assemblylines">AssemblyLines</h3>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 3%" />
+<col style="width: 6%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>assembly_line</td>
+<td>int</td>
+<td>główny</td>
+<td>Numer taśmy produkcyjnej</td>
+</tr>
+<tr>
+<td>min_capability</td>
+<td>int</td>
+<td></td>
+<td>Minimalna liczba produktów wytwarzanych na taśmie w ciągu dnia</td>
+</tr>
+<tr>
+<td>max_capability</td>
+<td>int</td>
+<td></td>
+<td>Maksymalna liczba produktów wytwarzanych na taśmie w ciągu dnia</td>
+</tr>
+</tbody>
+</table>
+<h3 id="orders">Orders</h3>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 8%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>order_id</td>
+<td>int</td>
+<td>główny</td>
+<td>Identyfikator zamówienia</td>
+</tr>
+<tr>
+<td>customer_id</td>
+<td>int</td>
+<td>obcy</td>
+<td>Identyfikator klienta</td>
+</tr>
+<tr>
+<td>order_date</td>
+<td>date</td>
+<td></td>
+<td>Data złożenia zamówienia</td>
+</tr>
+<tr>
+<td>required_date</td>
+<td>date</td>
+<td></td>
+<td>Zadeklarowana data dostarczenia zamówienia</td>
+</tr>
+<tr>
+<td>delivery_date</td>
+<td>date</td>
+<td></td>
+<td>Rzeczywista data dostarczenia zamówienia</td>
+</tr>
+<tr>
+<td>payment_type</td>
+<td>varchar(50)</td>
+<td></td>
+<td>Typ płatności</td>
+</tr>
+<tr>
+<td>discount</td>
+<td>decimal(10,2)</td>
+<td></td>
+<td>Zniżka na całe zamówienie</td>
+</tr>
+<tr>
+<td>paid</td>
+<td>bit</td>
+<td></td>
+<td>Określa, czy klient zapłacił za zamówienie</td>
+</tr>
+</tbody>
+</table>
+<h3 id="orderdetails">OrderDetails</h3>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>order_id</td>
+<td>int</td>
+<td>główny, obcy</td>
+<td>Identyfikator zamówienia</td>
+</tr>
+<tr>
+<td>product_id</td>
+<td>int</td>
+<td>główny, obcy</td>
+<td>Identyfikator produktu</td>
+</tr>
+<tr>
+<td>manufactoring_cost</td>
+<td>money</td>
+<td></td>
+<td>Koszt wyprodukowania jednej sztuki</td>
+</tr>
+<tr>
+<td>unit_price</td>
+<td>money</td>
+<td></td>
+<td>Cena za sztukę</td>
+</tr>
+<tr>
+<td>quantity</td>
+<td>int</td>
+<td></td>
+<td>Liczba zamówionych sztuk</td>
+</tr>
+<tr>
+<td>extra_remarks</td>
+<td>varchar(200)</td>
+<td></td>
+<td>Uwagi dodatkowe</td>
+</tr>
+</tbody>
+</table>
+<h3 id="customers">Customers</h3>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 14%" />
+<col style="width: 7%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>customer_id</td>
+<td>int</td>
+<td>główny</td>
+<td>Identyfikator klienta</td>
+</tr>
+<tr>
+<td>adress</td>
+<td>varchar (100)</td>
+<td></td>
+<td>Ulica i numer budynku</td>
+</tr>
+<tr>
+<td>city</td>
+<td>varchar(100)</td>
+<td></td>
+<td>Miasto siedziby klienta/ Miasto zamieszkania klienta</td>
+</tr>
+<tr>
+<td>region</td>
+<td>varchar(100)</td>
+<td></td>
+<td>Województwo/stan/land</td>
+</tr>
+<tr>
+<td>country</td>
+<td>varchar(50)</td>
+<td></td>
+<td>Kraj</td>
+</tr>
+<tr>
+<td>postal_code</td>
+<td>varchar(10)</td>
+<td></td>
+<td>Kod pocztowy</td>
+</tr>
+<tr>
+<td>contact_email</td>
+<td>varchar(100)</td>
+<td></td>
+<td>Email</td>
+</tr>
+<tr>
+<td>phone</td>
+<td>varchar (12)</td>
+<td></td>
+<td>Numer telefonu</td>
+</tr>
+</tbody>
+</table>
+<h3 id="individualcustomer">IndividualCustomer</h3>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 18%" />
+<col style="width: 19%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>customer_id</td>
+<td>int</td>
+<td>główny, obcy</td>
+<td>Identyfikator klienta</td>
+</tr>
+<tr>
+<td>name</td>
+<td>varchar(50)</td>
+<td></td>
+<td>Imię klienta</td>
+</tr>
+<tr>
+<td>surname</td>
+<td>varchar(50)</td>
+<td></td>
+<td>Nazwisko klienta</td>
+</tr>
+<tr>
+<td>title_of_courtesy</td>
+<td>varchar(20)</td>
+<td></td>
+<td>Pan/Pani</td>
+</tr>
+</tbody>
+</table>
+<h3 id="companycustomer">CompanyCustomer</h3>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>customer_id</td>
+<td>int</td>
+<td>główny, obcy</td>
+<td>Identyfikator klienta</td>
+</tr>
+<tr>
+<td>company_name</td>
+<td>varchar(50)</td>
+<td></td>
+<td>Nazwa firmy</td>
+</tr>
+<tr>
+<td>contact_person_name</td>
+<td>varchar(100)</td>
+<td></td>
+<td>Imię osoby kontaktowej</td>
+</tr>
+<tr>
+<td>contact_person_surname</td>
+<td>varchar(100)</td>
+<td></td>
+<td>Nazwisko osoby kontaktowej</td>
+</tr>
+<tr>
+<td>nip_number</td>
+<td>int</td>
+<td></td>
+<td>Numer NIP firmy</td>
+</tr>
+</tbody>
+</table>
+<h3 id="warehouse">Warehouse</h3>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 2%" />
+<col style="width: 10%" />
+<col style="width: 72%" />
+</colgroup>
+<thead>
+<tr>
+<th>Kolumna</th>
+<th>Typ</th>
+<th>Klucz</th>
+<th>Opis/Uwagi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>product_id</td>
+<td>int</td>
+<td>główny, obcy</td>
+<td>Identyfikator produktu</td>
+</tr>
+<tr>
+<td>quantity_on_stock</td>
+<td>int</td>
+<td></td>
+<td>Liczba sztuk na magazynie</td>
+</tr>
+<tr>
+<td>sector</td>
+<td>int</td>
+<td></td>
+<td>Sektor w magazynie, przy którym znajduje się produkt</td>
+</tr>
+<tr>
+<td>production_level</td>
+<td>int</td>
+<td></td>
+<td>Liczba sztuk produktu do której dąży się w przypadku mniejszych
+obrotów na produkcji</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
