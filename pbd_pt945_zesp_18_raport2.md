@@ -48,7 +48,7 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 
 ![Schemat bazy danych](schemat_bazy_3.svg)
 
-## Opis poszczególnych tabel
+## Opisy poszczególnych tabel (wraz z kodem DDL)
 
 ### Products
 
@@ -65,6 +65,19 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | production_level  | int |              | Liczba sztuk produktu do której dąży się w przypadku mniejszych obrotów na produkcji |
 | discontinued  | bit          |        | Określa, czy część została wycofana |
 
+
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
+
 ### ProductParts
 
 | Kolumna    | Typ | Klucz        | Opis/Uwagi                                                                                           |
@@ -72,6 +85,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | product_id | int | główny, obcy | Identyfikator produktu                                                                               |
 | part_id    | int | główny, obcy | Identyfikator części potrzebnej do produkcji produktu o identyfikatorze product_id                   |
 | quantity   | int |              | Liczba części o identyfikatorze part_id potrzebna do produkcji produktu o identyfikatorze product_id |
+
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
 
 ### Parts
 
@@ -85,6 +110,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | units_on_order | int          |        | Liczba części zamówionych (w drodze)                    |
 | reorder_level  | int          |        | Liczba units_in_stock przy której należy domówić części |
 | discontinued  | bit          |        | Określa, czy część została wycofana |
+
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
 
 ### Suppliers
 
@@ -101,6 +138,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | phone         | nvarchar (15)       |        | Numer telefonu                                       |
 | delivery_days | int          |        | Średni oczekiwany czas dostawy (do oszacowania czasu realizacji zamówienia) |
 
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
+
 ### Categories
 
 | Kolumna       | Typ         | Klucz  | Opis/Uwagi               |
@@ -109,6 +158,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | category_name | nvarchar(50)|        | Nazwa kategorii          |
 | assembly_line | int         | obcy   | Numer zespołu linii produkcyjnych |
 
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
+
 ### AssemblyLines
 
 | Kolumna        | Typ | Klucz  | Opis/Uwagi                                                      |
@@ -116,6 +177,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | assembly_line  | int | główny | Numer taśmy produkcyjnej                                        |
 | min_capability | int |        | Minimalna liczba produktów wytwarzanych na taśmie w ciągu dnia  |
 | max_capability | int |        | Maksymalna liczba produktów wytwarzanych na taśmie w ciągu dnia |
+
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
 
 ### Production
 
@@ -129,6 +202,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | production_startdate | datetime |              | Data rozpoczęcia produkcji                                |
 | production_enddate   | datetime |              | Data zakończenia produkcji                               |
 
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
+
 ### Orders
 
 | Kolumna       | Typ           | Klucz  | Opis/Uwagi                                 |
@@ -141,6 +226,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | discount      | decimal(5,4) |        | Zniżka na całe zamówienie                  ||
 | order_status      | nvarchar(5) |        | Aktualny status zamówienia                 ||
 
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
+
 ### OrderDetails
 
 | Kolumna            | Typ          | Klucz        | Opis/Uwagi                         |
@@ -151,6 +248,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | unit_price         | money        |              | Cena za sztukę     |                |
 | extra_remarks      | nvarchar(200) |              | Uwagi dodatkowe                    |
 
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
+
 ### Payments
 
 | Kolumna           | Typ         | Klucz        | Opis/Uwagi            |
@@ -160,6 +269,17 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | payment_type           | nvarchar(20) |              | Typ płatności (np. karta przy odbiorze, BLIK, przelew)      |
 | payment_date | datetime |              | Data zaksięgowania przelewu              |
 
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
 
 ### Cancelled_Orders
 
@@ -169,6 +289,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | cancel_date              | datetime |              | Data anulowania zamówienia          |
 | reason           | nvarchar(500) |              | Powód anulowania zamówienia      |
 | compensation | money |              | Wartość dodatkowej opłaty za anulowane zamówienie              |
+
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
 
 ### Customers
 
@@ -183,6 +315,17 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | contact_email | nvarchar(100) |        | Email                                                |
 | phone         | nvarchar (15)       |        | Numer telefonu                                       |
 
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
 
 ### IndividualCustomer
 
@@ -192,6 +335,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | name              | nvarchar(100) |              | Imię klienta          |
 | surname           | nvarchar(100) |              | Nazwisko klienta      |
 | title_of_courtesy | nvarchar(10) |              | Pan/Pani              |
+
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
 
 ### CompanyCustomer
 
@@ -203,6 +358,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | contact_person_surname | nvarchar(100) |              | Nazwisko osoby kontaktowej |
 | nip_number             | nvarchar (10)          |              | Numer NIP firmy            |
 
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
+
 ### Days_Off
 
 | Kolumna                | Typ          | Klucz        | Opis/Uwagi                 |
@@ -210,9 +377,19 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | holiday_date            | date          | główny | Data święta wolnego od pracy      |
 | holiday_name           | date  |              | Nazwa święta wolnego od pracy               |
 
-(Dla każdej tabeli kod DDL wraz z zaimplementowanymi war. integralności, + ewentualnie opis, np. w formie tabelki)
+#### Kod DDL
+```sql
+-- Table: Assembly_Lines
+CREATE TABLE Assembly_Lines (
+    assembly_line int  NOT NULL IDENTITY,
+    min_capability int  NOT NULL,
+    max_capability int  NOT NULL,
+    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
+    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+);
+```
 
-- kod DDL
+## Referencje pomiędzy tabelami
 
 ```sql
 -- Table: Assembly_Lines
