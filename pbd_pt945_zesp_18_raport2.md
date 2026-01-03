@@ -374,7 +374,7 @@ CREATE TABLE Assembly_Lines (
 
 | Kolumna                | Typ          | Klucz        | Opis/Uwagi                 |
 | ---------------------- | ------------ | ------------ | -------------------------- |
-| date_key            | date          | główny | Data święta wolnego od pracy      |
+| calendar_date            | date          | główny | Data      |
 | day_of_week           | tinyint  |              | Dzień tygodnia               |
 | weekend          | bit  |              | Określa, czy data wypada w sobotę lub niedzielę               |
 | national_holiday          | bit  |              | Określa, czy data jest świętem narodowym               |
