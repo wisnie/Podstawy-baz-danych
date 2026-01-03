@@ -370,12 +370,15 @@ CREATE TABLE Assembly_Lines (
 );
 ```
 
-### Days_Off
+### Calendar
 
 | Kolumna                | Typ          | Klucz        | Opis/Uwagi                 |
 | ---------------------- | ------------ | ------------ | -------------------------- |
-| holiday_date            | date          | główny | Data święta wolnego od pracy      |
-| holiday_name           | date  |              | Nazwa święta wolnego od pracy               |
+| date_key            | date          | główny | Data święta wolnego od pracy      |
+| day_of_week           | tinyint  |              | Dzień tygodnia               |
+| weekend          | bit  |              | Określa, czy data wypada w sobotę lub niedzielę               |
+| national_holiday          | bit  |              | Określa, czy data jest świętem narodowym               |
+| holiday_name          | nvarchar(50)  |              | Nazwa święta narodowego              |
 
 #### Kod DDL
 ```sql
