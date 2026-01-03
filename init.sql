@@ -3,10 +3,10 @@ USE u_bawisnie;
 -- Table: Calendar
 CREATE TABLE dbo.Calendar
 (
-    date DATE PRIMARY KEY,
+    calendar_date DATE PRIMARY KEY,
     day_of_week TINYINT  NOT NULL,
-    is_weekend BIT  NOT NULL,
-    is_national_holiday BIT  NOT NULL,
+    weekend BIT NOT NULL,
+    national_holiday BIT  NOT NULL,
     holiday_name  NVARCHAR(50) NULL
 );
 
