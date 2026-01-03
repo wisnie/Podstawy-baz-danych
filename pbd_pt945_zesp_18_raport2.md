@@ -56,7 +56,8 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | --------------- | ----------- | ------ | ----------------------------------------------------- |
 | product_id      | int         | główny | Identyfikator produktu                                |
 | product_name    | nvarchar(100) |        | Nazwa produktu                                        |
-| manufactoring_cost      | money         |    | Koszt wyprodukowania jednej sztuki (włącznie z częściami)  
+| unit_price      | money         |    | Koszt wyprodukowania jednej sztuki (włącznie z częściami)  |
+| manufactoring_cost      | money         |    | Koszt wyprodukowania jednej sztuki (robocizna)  
 | category_id     | int         | obcy   | Identyfikator kategorii                               |
 | production_time_unit | int         |        | Jednostka określająca całkowitą liczbę jednostek czasu, w której produkowany jest dany produkt. 10 jednostek to jedna roboczogodzina na taśmie produkcyjnej. |
 | quantity_in_stock | int |              | Liczba sztuk na magazynie                                                            |
@@ -98,7 +99,7 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | country       | nvarchar(30)  |        | Kraj                                                                        |
 | contact_email | nvarchar(100) |        | Adres email                                                |
 | phone         | nvarchar (15)       |        | Numer telefonu                                       |
-| delivery_time | int          |        | Średni oczekiwany czas dostawy (do oszacowania czasu realizacji zamówienia) |
+| delivery_days | int          |        | Średni oczekiwany czas dostawy (do oszacowania czasu realizacji zamówienia) |
 
 ### Categories
 
@@ -201,6 +202,13 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | contact_person_name    | nvarchar(100) |              | Imię osoby kontaktowej     |
 | contact_person_surname | nvarchar(100) |              | Nazwisko osoby kontaktowej |
 | nip_number             | nvarchar (10)          |              | Numer NIP firmy            |
+
+### Days_Off
+
+| Kolumna                | Typ          | Klucz        | Opis/Uwagi                 |
+| ---------------------- | ------------ | ------------ | -------------------------- |
+| holiday_date            | date          | główny | Data święta wolnego od pracy      |
+| holiday_name           | date  |              | Nazwa święta wolnego od pracy               |
 
 (Dla każdej tabeli kod DDL wraz z zaimplementowanymi war. integralności, + ewentualnie opis, np. w formie tabelki)
 
