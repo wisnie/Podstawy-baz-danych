@@ -1,4 +1,4 @@
-USE u_liskowsk;
+USE u_bawisnie;
 
 SET NOCOUNT ON;
 SET DATEFIRST 1; -- 1 = Poniedziałek
@@ -10,7 +10,7 @@ SET DATEFIRST 1; -- 1 = Poniedziałek
 -- Usuwanie kluczy obcych (dla bezpieczeństwa przy dropowaniu)
 DECLARE @sql NVARCHAR(MAX) = N'';
 SELECT @sql += N'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id))
-    + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) + 
+    + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) +
     ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
 FROM sys.foreign_keys;
 EXEC(@sql);
@@ -73,11 +73,11 @@ CREATE TABLE dbo.Products (
     manufacturing_cost MONEY,
     unit_price MONEY,
     category_id INT FOREIGN KEY REFERENCES Categories(category_id),
-    production_time_unit INT, -- minuty
-    units_in_stock INT,       -- ZMIANA NAZWY (z quantity_in_stock)
+    production_time_unit INT,
+    quantity_in_stock INT,
     warehouse_sector INT,
-    production_level INT,     -- poziom minimalny do wznowienia produkcji
-    discontinued BIT DEFAULT 0 -- NOWA KOLUMNA
+    production_level INT,
+    discontinued BIT DEFAULT 0
 );
 
 CREATE TABLE dbo.Parts (
@@ -183,7 +183,7 @@ WITH Dates AS (
     WHERE DateVal < @EndDate
 )
 INSERT INTO dbo.Calendar (calendar_date, day_of_week, weekend, national_holiday, holiday_name)
-SELECT 
+SELECT
     DateVal,
     DATEPART(WEEKDAY, DateVal),
     CASE WHEN DATEPART(WEEKDAY, DateVal) IN (6, 7) THEN 1 ELSE 0 END,
@@ -233,8 +233,7 @@ INSERT INTO Categories (category_name, assembly_line) VALUES
 ('Stoły Konferencyjne', 4),
 ('Ruchome Stojaki na Projektory', 5);
 
--- ZMODYFIKOWANY INSERT DO PRODUCTS (Zmiana quantity_in_stock -> units_in_stock, dodano discontinued)
-INSERT INTO Products (product_name, manufacturing_cost, unit_price, category_id, production_time_unit, units_in_stock, warehouse_sector, production_level, discontinued)
+INSERT INTO Products (product_name, manufacturing_cost, unit_price, category_id, production_time_unit, quantity_in_stock, warehouse_sector, production_level, discontinued)
 VALUES
 ('Biurko Basic 120x60', 150.00, 399.00, 1, 15, 50, 1, 10, 0),
 ('Biurko Narożne Manager', 320.00, 850.00, 1, 35, 15, 1, 5, 0),
@@ -467,7 +466,7 @@ GROUP BY od.product_id, c.assembly_line, p.manufacturing_cost;
 
 -- Cancelled Orders (Scenariusze)
 INSERT INTO Cancelled_Orders (order_id, cancellation_date, reason, compensation)
-VALUES 
+VALUES
 (56, '2025-10-20 18:00:00', 'Rezygnacja klienta', 0.00),
 (22, '2025-05-20 10:00:00', 'Brak części na produkcji', 0.00),
 (67, '2025-12-16 09:00:00', 'Odstąpienie w trakcie produkcji', 1800.00);
