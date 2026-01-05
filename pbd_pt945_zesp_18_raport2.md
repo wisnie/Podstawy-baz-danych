@@ -649,7 +649,219 @@ select a from tab1
 (dla każdej procedury/funkcji należy wkleić kod polecenia definiującego procedurę wraz z komentarzem)
 
 ```sql
--- ...
+CREATE PROCEDURE dbo.AddOrder(
+    @customer_id INT,
+    @estimated_date DATE = NULL,
+    @delivery_date DATE = NULL,
+    @discount DECIMAL(5, 4) = 0,
+    @order_status NVARCHAR(5) = 'PROCE'
+) AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @order_date DATE;
+    SET @order_date = SYSDATETIME();
+
+    BEGIN TRY
+        INSERT INTO Orders
+        (customer_id, order_date, estimated_date, delivery_date, discount, order_status)
+        VALUES (@customer_id,
+                @order_date,
+                @estimated_date,
+                @delivery_date,
+                @discount,
+                @order_status)
+    END TRY
+    BEGIN CATCH
+        PRINT 'Order could not be added: ' + ERROR_MESSAGE();
+    END CATCH
+END;
+GO
+```
+
+```sql
+CREATE PROCEDURE dbo.AddOrderDetail(
+    @order_id INT,
+    @product_id INT,
+    @quantity INT,
+    @unit_price MONEY,
+    @extra_remarks NVARCHAR(200) = NULL
+) AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        INSERT INTO Order_Details
+        (order_id, product_id, quantity, unit_price, extra_remarks)
+        VALUES (    @order_id ,
+    @product_id ,
+    @quantity ,
+    @unit_price ,
+    @extra_remarks)
+    END TRY
+    BEGIN CATCH
+        PRINT 'Order detail could not be added: ' + ERROR_MESSAGE();
+    END CATCH
+END;
+GO
+```
+
+```sql
+CREATE PROCEDURE dbo.CancelOrder(
+    @order_id INT,
+    @reason NVARCHAR(500) = NULL,
+    @compensation MONEY = 0
+) AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @cancellation_date DATE;
+    SET @cancellation_date = SYSDATETIME();
+    BEGIN TRY
+        INSERT INTO Cancelled_Orders
+            (order_id, cancellation_date, reason, compensation)
+        VALUES (@order_id, @cancellation_date,
+                @reason, @compensation)
+    END TRY
+    BEGIN CATCH
+        PRINT 'Order could not be cancelled: ' + ERROR_MESSAGE();
+    END CATCH
+END;
+GO
+```
+
+```sql
+CREATE PROCEDURE GenerateReceipt(@order_id INT) AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT Orders.order_id,
+           Products.product_id,
+           product_name,
+           Products.unit_price,
+           quantity,
+           Products.unit_price * quantity AS product_total
+    FROM Orders
+             INNER JOIN Order_Details
+                        ON Orders.order_id = Order_Details.order_id
+             INNER JOIN Products ON
+        Order_Details.product_id = Products.product_id
+    WHERE Orders.order_id = @order_id;
+
+    SELECT Orders.order_id,
+           SUM(Products.unit_price * quantity)                  AS order_total,
+           discount,
+           SUM(Products.unit_price * quantity) * (1 - discount) AS after_discount
+    FROM Orders
+             INNER JOIN Order_Details
+                        ON Orders.order_id = Order_Details.order_id
+             INNER JOIN Products ON
+        Order_Details.product_id = Products.product_id
+    WHERE Orders.order_id = @order_id
+    GROUP BY Orders.order_id, discount;
+END;
+GO
+```
+
+```sql
+CREATE PROCEDURE dbo.AddPart(
+    @part_name NVARCHAR(100),
+    @part_cost MONEY,
+    @supplier_id INT,
+    @units_in_stock INT,
+    @units_on_order INT,
+    @reorder_level INT,
+    @discontinued BIT = 0
+) AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        INSERT INTO Parts
+        (part_name, part_cost, supplier_id, units_in_stock, units_on_order, reorder_level, discontinued)
+        VALUES (@part_name,
+                @part_cost,
+                @supplier_id,
+                @units_in_stock,
+                @units_on_order,
+                @reorder_level,
+                @discontinued)
+    END TRY
+    BEGIN CATCH
+        PRINT 'Part could not be added: ' + ERROR_MESSAGE();
+    END CATCH
+END;
+GO
+
+CREATE PROCEDURE dbo.AddPartToProduct(
+    @part_id INT,
+    @product_id INT,
+    @quantity INT
+) AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        INSERT INTO Product_Parts
+        VALUES (@part_id,
+                @product_id,
+                @quantity)
+    END TRY
+    BEGIN CATCH
+        PRINT 'Part could not be added to Product definition: ' + ERROR_MESSAGE();
+    END CATCH
+END;
+GO
+```
+
+
+```sql
+CREATE PROCEDURE dbo.AddPartToProduct(
+    @part_id INT,
+    @product_id INT,
+    @quantity INT
+) AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        INSERT INTO Product_Parts
+        VALUES (@part_id,
+                @product_id,
+                @quantity)
+    END TRY
+    BEGIN CATCH
+        PRINT 'Part could not be added to Product definition: ' + ERROR_MESSAGE();
+    END CATCH
+END;
+GO
+```
+
+```sql
+CREATE PROCEDURE ViewScheduledProduction(@product_id INT,
+                                         @start_date DATE,
+                                         @end_date DATE = NULL
+) AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @end_date IS NULL
+        SET @end_date = SYSDATETIME();
+
+    SELECT production_id,
+           production.product_id,
+           product_name,
+           assembly_line,
+           production.manufacturing_cost,
+           quantity,
+           production_startdate,
+           production_enddate,
+           order_id
+    FROM Production
+             INNER JOIN Products
+                        ON Production.product_id = Products.product_id
+    WHERE production.product_id = @product_id
+      AND ((production_startdate >= @start_date AND production_startdate <= @end_date)
+        OR (production_enddate >= @start_date AND production_enddate <= @end_date))
+END;
+GO
 ```
 
 ## Triggery
@@ -657,7 +869,22 @@ select a from tab1
 (dla każdego triggera należy wkleić kod polecenia definiującego trigger wraz z komentarzem)
 
 ```sql
--- ...
+CREATE TRIGGER dbo.OrderStatusChange
+    ON Orders
+    AFTER INSERT, UPDATE
+    AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF UPDATE(order_status)
+        BEGIN
+            INSERT INTO Order_Status_History (order_id, order_status, status_change_date)
+            SELECT inserted.order_id,
+                   inserted.order_status,
+                   SYSDATETIME()
+            FROM inserted;
+        END
+END;
 ```
 
 # 4. Inne

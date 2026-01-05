@@ -238,3 +238,12 @@ ALTER TABLE Production ADD CONSTRAINT Production_AssemblyLines
 ALTER TABLE Production ADD CONSTRAINT Production_Product
     FOREIGN KEY (product_id)
     REFERENCES Products (product_id);
+
+
+CREATE TABLE Order_Status_History
+(
+    order_id           int         NOT NULL,
+    order_status       nvarchar(5) NOT NULL,
+    status_change_date date        NOT NULL,
+    CONSTRAINT order_id PRIMARY KEY (order_id)
+);
