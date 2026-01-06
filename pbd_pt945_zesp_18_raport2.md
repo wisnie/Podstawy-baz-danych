@@ -46,7 +46,7 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 
 ## Schemat bazy danych
 
-![Schemat bazy danych](schemat_bazy_3.svg)
+![Schemat bazy danych](schemat_bazy_4.svg)
 
 ## Opisy poszczególnych tabel (wraz z kodem DDL)
 
@@ -534,14 +534,6 @@ ALTER TABLE Production ADD CONSTRAINT Production_Product
     REFERENCES Products (product_id);
 ```
 
-- Opis: (opis tabeli, komentarz)
-- np.
-
-| Nazwa atrybutu | Typ | Opis/Uwagi |
-| -------------- | --- | ---------- |
-| Atrybut 1 …    |     |            |
-| Atrybut 2 …    |     |            |
-
 # 3. Widoki, procedury/funkcje, triggery
 
 ## Widoki
@@ -557,6 +549,8 @@ select a from tab1
 ## Procedury/funkcje
 
 (dla każdej procedury/funkcji należy wkleić kod polecenia definiującego procedurę wraz z komentarzem)
+
+1. **AddOrder** - dodaje zamówienie do bazy danych
 
 ```sql
 CREATE PROCEDURE dbo.AddOrder(
@@ -589,6 +583,8 @@ END;
 GO
 ```
 
+2. **AddOrderDetail** - dodaje do bazy danych "składowe" zamówienia
+
 ```sql
 CREATE PROCEDURE dbo.AddOrderDetail(
     @order_id INT,
@@ -616,6 +612,8 @@ END;
 GO
 ```
 
+3. **CancelOrder** - procedura usunięcia zamówienia wraz z przeniesieniem go do Cancelled_Orders
+
 ```sql
 CREATE PROCEDURE dbo.CancelOrder(
     @order_id INT,
@@ -638,6 +636,8 @@ BEGIN
 END;
 GO
 ```
+
+4. **GenerateReceipt** - procedura generująca paragon do zamówienia
 
 ```sql
 CREATE PROCEDURE GenerateReceipt(@order_id INT) AS
@@ -670,6 +670,8 @@ BEGIN
 END;
 GO
 ```
+
+5. **AddPart** - procedura dodania nowej części
 
 ```sql
 CREATE PROCEDURE dbo.AddPart(
@@ -722,6 +724,7 @@ END;
 GO
 ```
 
+6. **AddPartToProduct** - procedura dodająca część do definicji produktu
 
 ```sql
 CREATE PROCEDURE dbo.AddPartToProduct(
@@ -744,6 +747,8 @@ BEGIN
 END;
 GO
 ```
+
+7. **ViewScheduledProduction** - procedura generująca/pokazująca zaplanowaną produkcję
 
 ```sql
 CREATE PROCEDURE ViewScheduledProduction(@product_id INT,
@@ -774,7 +779,7 @@ END;
 GO
 ```
 
-1. **AddNewProduct** - dodaje nowy produkt do bazy danych.
+8. **AddNewProduct** - dodaje nowy produkt do bazy danych.
 
 ```sql
 CREATE PROCEDURE AddNewProduct (@product_name NVARCHAR(100), @unit_price MONEY, @manufactoring_cost MONEY, @category_id INT, @production_time_unit INT, @quantity_in_stock INT, @warehouse_sector INT, @production_level INT, @discontinued BIT)
@@ -799,7 +804,7 @@ BEGIN
 END
 ```
 
-2. **AddNewIndividualCustomer** - dodaje nowego klienta indywidualnego do bazy danych.
+9. **AddNewIndividualCustomer** - dodaje nowego klienta indywidualnego do bazy danych.
 
 ```sql
 CREATE PROCEDURE AddNewIndividualCustomer(@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50), @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100), @phone nvarchar(15), @name NVARCHAR(100), @surname NVARCHAR(100), @title_of_courtesy NVARCHAR(10))
@@ -826,7 +831,7 @@ BEGIN
 END
 ```
 
-3. **AddNewCompanyCustomer** - dodaje nową firmę będącą klientem do bazy danych.
+10. **AddNewCompanyCustomer** - dodaje nową firmę będącą klientem do bazy danych.
 
 ```sql
 CREATE PROCEDURE AddNewCompanyCustomer(@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50), @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100), @phone nvarchar(15), @company_name NVARCHAR(100), @contact_person_name NVARCHAR(100), @contact_person_surname NVARCHAR(100), @nip_number NVARCHAR(10))
@@ -853,9 +858,135 @@ BEGIN
 END
 ```
 
+11. **Last_Orders_From_Client** - generuje poprzednie zamówienia danego klienta, wraz ze zniżkami i wartością zamówienia przed/po zamówieniu
+
+```sql
+CREATE PROCEDURE Last_Orders_From_Client
+    @CustomerID INT,
+    @DateFrom DATE,
+    @DateTo DATE
+AS
+BEGIN
+    SELECT 
+        c.customer_id,
+        o.order_id,
+        o.order_date,
+        SUM(od.unit_price * od.quantity) AS total_before_discount,
+        SUM(od.unit_price * od.quantity) * o.discount AS discount_value,
+        SUM(od.unit_price * od.quantity) * (1 - o.discount) AS total_after_discount,
+        o.discount
+    FROM Customers c
+    INNER JOIN Orders o 
+        ON c.customer_id = o.customer_id
+    INNER JOIN Order_Details od 
+        ON o.order_id = od.order_id
+    WHERE 
+        c.customer_id = @CustomerID
+        AND o.order_date BETWEEN @DateFrom AND @DateTo
+    GROUP BY 
+        c.customer_id,
+        o.order_id,
+        o.order_date,
+        o.discount
+    ORDER BY 
+        o.order_date DESC;
+END;
+```
+
+12. **Top_Product_Groups** - generuje listę najlepiej sprzedawanych produktów (wewnątrz danej kategorii) w tygodniu, miesiącu, roku, w podanym zakresie dat
+
+```sql
+CREATE PROCEDURE Top_Product_Groups
+    @DateFrom DATE,
+    @DateTo DATE,
+    @CategoryID INT
+AS
+BEGIN
+    SELECT 
+        p.product_id,
+        p.product_name,
+
+        -- wartości
+        SUM(od.unit_price * od.quantity) AS total_before_discount,
+        SUM(od.unit_price * od.quantity * od.discount) AS total_discount,
+        SUM(od.unit_price * od.quantity * (1 - od.discount)) AS total_after_discount,
+
+        -- grupowanie czasowe
+        DATEPART(YEAR, o.order_date) AS year_no,
+        DATEPART(MONTH, o.order_date) AS month_no,
+        DATEPART(WEEK, o.order_date) AS week_no
+
+    FROM Products p
+    INNER JOIN Order_Details od ON od.product_id = p.product_id
+    INNER JOIN Orders o ON o.order_id = od.order_id
+
+    WHERE 
+        p.category_id = @CategoryID
+        AND o.order_date BETWEEN @DateFrom AND @DateTo
+
+    GROUP BY 
+        ROLLUP (
+            p.product_id,
+            p.product_name,
+            DATEPART(YEAR, o.order_date),
+            DATEPART(MONTH, o.order_date),
+            DATEPART(WEEK, o.order_date)
+        )
+
+    ORDER BY 
+        total_after_discount DESC;
+END;
+```
+
+13. **Top_Products** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
+
+```sql
+CREATE PROCEDURE Top_Products
+    @DateFrom DATE,
+    @DateTo DATE
+AS
+BEGIN
+    SELECT 
+        p.product_id,
+        p.product_name,
+
+        SUM(od.unit_price * od.quantity) AS total_before_discount,
+        SUM(od.unit_price * od.quantity * od.discount) AS total_discount,
+        SUM(od.unit_price * od.quantity * (1 - od.discount)) AS total_after_discount,
+
+        DATEPART(YEAR, o.order_date) AS year_no,
+        DATEPART(MONTH, o.order_date) AS month_no,
+        DATEPART(WEEK, o.order_date) AS week_no
+
+    FROM Products p
+    INNER JOIN Order_Details od ON od.product_id = p.product_id
+    INNER JOIN Orders o ON o.order_id = od.order_id
+
+    WHERE 
+        o.order_date BETWEEN @DateFrom AND @DateTo
+
+    GROUP BY 
+        ROLLUP (
+            p.product_id,
+            p.product_name,
+            DATEPART(YEAR, o.order_date),
+            DATEPART(MONTH, o.order_date),
+            DATEPART(WEEK, o.order_date)
+        )
+
+    ORDER BY 
+        total_after_discount DESC;
+END;
+
+```
+
+
+
 ## Triggery
 
 (dla każdego triggera należy wkleić kod polecenia definiującego trigger wraz z komentarzem)
+
+1. **OrderStatusChange** - obsługuje zmiany statusu zamówienia, wraz z postępem jego realizacji.
 
 ```sql
 CREATE TRIGGER dbo.OrderStatusChange
@@ -876,7 +1007,7 @@ BEGIN
 END;
 ```
 
-1. **UpdateProductionAndWarehouseWhenNewOrder** - realizuje automatyczną obsługę stanu magazynu i planu produkcji po złożeniu zamówienia. Po dodaniu pozycji do Order_Details zmniejsza stan magazynu produktu. W przypadku braku wystarczającej liczby produktów na magazynie automatycznie tworzy wpis w tabeli Production dla brakującej ilości oraz ustawia stan magazynowy na zero.
+2. **UpdateProductionAndWarehouseWhenNewOrder** - realizuje automatyczną obsługę stanu magazynu i planu produkcji po złożeniu zamówienia. Po dodaniu pozycji do Order_Details zmniejsza stan magazynu produktu. W przypadku braku wystarczającej liczby produktów na magazynie automatycznie tworzy wpis w tabeli Production dla brakującej ilości oraz ustawia stan magazynowy na zero.
 
 ```sql
 CREATE TRIGGER UpdateProductionAndWarehouseWhenNewOrder
@@ -888,7 +1019,7 @@ BEGIN
 
     -- Aktualizacja magazynu --
     UPDATE p
-    SET p.quantity_in_stock = p.quantity_in_stock - i.quantity -- na razie może być ujemne
+    SET p.quantity_in_stock = p.quantity_in_stock - i.quantity
     FROM Products p
     JOIN INSERTED i ON p.product_id = i.product_id;
 
@@ -912,6 +1043,22 @@ BEGIN
     WHERE quantity_in_stock < 0;
 END;
 GO
+```
+
+3. **Update_Parts_Inventory** - aktualizuje liczbę poszczególnych części na podstawie wykonanego zamówienia
+
+```sql
+CREATE TRIGGER update_parts_inventory
+ON Production
+AFTER INSERT
+AS
+BEGIN
+    UPDATE p
+    SET p.units_in_stock = p.units_in_stock - (pp.quantity * i.quantity)
+    FROM Parts p
+    JOIN Product_Parts pp ON p.part_id = pp.part_id
+    JOIN inserted i ON pp.product_id = i.product_id;
+END;
 ```
 
 # 4. Inne
