@@ -68,13 +68,18 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Products
+CREATE TABLE Products (
+    product_id int  NOT NULL IDENTITY,
+    product_name nvarchar(100)  NOT NULL,
+    manufacturing_cost money  NOT NULL CHECK (manufacturing_cost >= 0),
+    unit_price money NOT NULL CHECK (unit_price >= 0),
+    category_id int  NOT NULL,
+    production_time_unit int  NOT NULL CHECK (production_time_unit >= 0),
+    quantity_on_stock int  NOT NULL CHECK (quantity_on_stock >= 0),
+    warehouse_sector int  NOT NULL CHECK (warehouse_sector >=0),
+    production_level int  NOT NULL CHECK (production_level >= 0),
+    CONSTRAINT Products_pk PRIMARY KEY  (product_id)
 );
 ```
 
@@ -89,13 +94,12 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Product_Parts
+CREATE TABLE Product_Parts (
+    product_id int  NOT NULL,
+    part_id int  NOT NULL,
+    quantity int  NOT NULL CHECK (quantity >= 0),
+    CONSTRAINT Product_Parts_pk PRIMARY KEY  (part_id,product_id)
 );
 ```
 
@@ -115,13 +119,16 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Parts
+CREATE TABLE Parts (
+    part_id int  NOT NULL IDENTITY,
+    part_name nvarchar(100)  NOT NULL,
+    part_cost money  NOT NULL CHECK (part_cost >= 0),
+    supplier_id int  NOT NULL,
+    units_in_stock int  NOT NULL CHECK (units_in_stock >= 0),
+    units_on_order int  NOT NULL CHECK (units_on_order >= 0),
+    reorder_level int  NOT NULL CHECK (reorder_level >= 0),
+    CONSTRAINT Parts_pk PRIMARY KEY  (part_id)
 );
 ```
 
@@ -143,13 +150,19 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Suppliers
+CREATE TABLE Suppliers (
+    supplier_id int  NOT NULL IDENTITY,
+    name nvarchar(50)  NOT NULL,
+    address nvarchar(100)  NOT NULL,
+    city nvarchar(30)  NOT NULL,
+    region nvarchar(50)  NOT NULL,
+    postal_code nvarchar(10)  NOT NULL,
+    country nvarchar(30)  NOT NULL,
+    contact_email nvarchar(100)  NOT NULL CHECK (contact_email LIKE '%_@__%.__%'),
+    phone nvarchar(15)  NOT NULL,
+    delivery_days int  NOT NULL CHECK (delivery_days >= 0),
+    CONSTRAINT Suppliers_pk PRIMARY KEY  (supplier_id)
 );
 ```
 
@@ -164,13 +177,12 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Categories
+CREATE TABLE Categories (
+    category_id int  NOT NULL IDENTITY,
+    category_name nvarchar(50)  NOT NULL,
+    assembly_line int  NOT NULL,
+    CONSTRAINT Categories_pk PRIMARY KEY  (category_id)
 );
 ```
 
@@ -187,11 +199,10 @@ CREATE TABLE Assembly_Lines (
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
+    assembly_line int  NOT NULL IDENTITY CHECK (assembly_line >= 0),
     min_capability int  NOT NULL,
     max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+    CONSTRAINT Assembly_Lines_pk PRIMARY KEY  (assembly_line)
 );
 ```
 
@@ -210,13 +221,18 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Production
+CREATE TABLE Production (
+    production_id int  NOT NULL IDENTITY,
+    product_id int  NOT NULL,
+    assembly_line int  NOT NULL,
+    manufacturing_cost money  NOT NULL CHECK (manufacturing_cost >= 0),
+    quantity int  NOT NULL CHECK (quantity >= 0),
+    production_startdate datetime  NULL,
+    production_enddate datetime  NULL,
+    order_id int  NULL,
+    CONSTRAINT production_startdate_bef_enddate CHECK (production_startdate <= production_enddate),
+    CONSTRAINT Production_pk PRIMARY KEY  (production_id)
 );
 ```
 
@@ -235,13 +251,17 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Orders
+CREATE TABLE Orders (
+    order_id int  NOT NULL IDENTITY,
+    customer_id int  NOT NULL,
+    order_date date  NOT NULL,
+    estimated_date date  NOT NULL,
+    delivery_date date  NULL,
+    discount decimal(5,4)  NOT NULL CHECK (discount BETWEEN 0 AND 1 ),
+    CONSTRAINT required_date_after_order CHECK (estimated_date >= order_date),
+    CONSTRAINT delivery_date_after_order CHECK (delivery_date >= order_date),
+    CONSTRAINT Orders_pk PRIMARY KEY  (order_id)
 );
 ```
 
@@ -258,13 +278,14 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Order_Details
+CREATE TABLE Order_Details (
+    order_id int  NOT NULL,
+    product_id int  NOT NULL,
+    quantity int  NOT NULL CHECK (quantity > 0),
+    unit_price money  NOT NULL CHECK (unit_price > 0),
+    extra_remarks nvarchar(200)  NULL,
+    CONSTRAINT Order_Details_pk PRIMARY KEY  (order_id,product_id)
 );
 ```
 
@@ -280,13 +301,13 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Payments
+CREATE TABLE Payments (
+    order_id int  NOT NULL,
+    paid_amount money  NOT NULL CHECK (paid_amount > 0),
+    payment_type nvarchar(20)  NOT NULL,
+    payment_date datetime  NOT NULL,
+    CONSTRAINT Payments_pk PRIMARY KEY  (order_id)
 );
 ```
 
@@ -302,13 +323,13 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Cancelled_Orders
+CREATE TABLE Cancelled_Orders (
+    order_id int  NOT NULL,
+    cancellation_date datetime  NOT NULL,
+    reason nvarchar(500)  NOT NULL,
+    compensation money  NOT NULL CHECK (compensation >= 0),
+    CONSTRAINT Cancelled_Orders_pk PRIMARY KEY  (order_id)
 );
 ```
 
@@ -328,17 +349,21 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Customers
+CREATE TABLE Customers (
+    customer_id int  NOT NULL IDENTITY,
+    address nvarchar(100)  NOT NULL,
+    city nvarchar(30)  NOT NULL,
+    region nvarchar(50)  NOT NULL,
+    country nvarchar(50)  NOT NULL,
+    postal_code nvarchar(10)  NOT NULL,
+    contact_email nvarchar(100)  NOT NULL CHECK (contact_email LIKE '%_@__%.__%'),
+    phone nvarchar(15)  NOT NULL,
+    CONSTRAINT Customers_pk PRIMARY KEY  (customer_id)
 );
 ```
 
-### IndividualCustomer
+### IndividualCustomers
 
 | Kolumna           | Typ           | Klucz        | Opis/Uwagi            |
 | ----------------- | ------------- | ------------ | --------------------- |
@@ -350,17 +375,17 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Individual_Customers
+CREATE TABLE Individual_Customers (
+    customer_id int  NOT NULL,
+    name nvarchar(100)  NOT NULL,
+    surname nvarchar(100)  NOT NULL,
+    title_of_courtesy nvarchar(10)  NOT NULL,
+    CONSTRAINT Individual_Customers_pk PRIMARY KEY  (customer_id)
 );
 ```
 
-### CompanyCustomer
+### CompanyCustomers
 
 | Kolumna                | Typ           | Klucz        | Opis/Uwagi                 |
 | ---------------------- | ------------- | ------------ | -------------------------- |
@@ -373,13 +398,14 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Company_Customers
+CREATE TABLE Company_Customers (
+    customer_id int  NOT NULL,
+    company_name nvarchar(100)  NOT NULL,
+    contact_person_name nvarchar(100)  NOT NULL,
+    contact_person_surname nvarchar(100)  NOT NULL,
+    nip_number nvarchar(10)  NOT NULL,
+    CONSTRAINT Company_Customers_pk PRIMARY KEY  (customer_id)
 );
 ```
 
@@ -396,171 +422,20 @@ CREATE TABLE Assembly_Lines (
 #### Kod DDL
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
+-- Table: Calendar
+CREATE TABLE dbo.Calendar
+(
+    calendar_date DATE PRIMARY KEY,
+    day_of_week TINYINT  NOT NULL,
+    weekend BIT NOT NULL,
+    national_holiday BIT  NOT NULL,
+    holiday_name  NVARCHAR(50) NULL
 );
 ```
 
 ## Referencje pomiędzy tabelami
 
 ```sql
--- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY,
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT assembly_line CHECK (assembly_line >= 0),
-    CONSTRAINT Power PRIMARY KEY  (assembly_line)
-);
-
--- Table: Cancelled_Orders
-CREATE TABLE Cancelled_Orders (
-    order_id int  NOT NULL,
-    cancel_date datetime  NOT NULL,
-    reason nvarchar(500)  NOT NULL,
-    compensation money  NOT NULL CHECK (compensation >= 0),
-    CONSTRAINT Cancelled_Orders_pk PRIMARY KEY  (order_id)
-);
-
--- Table: Categories
-CREATE TABLE Categories (
-    category_id int  NOT NULL IDENTITY,
-    category_name nvarchar(50)  NOT NULL,
-    assembly_line int  NOT NULL,
-    CONSTRAINT Categories_pk PRIMARY KEY  (category_id)
-);
-
--- Table: Company_Customers
-CREATE TABLE Company_Customers (
-    customer_id int  NOT NULL,
-    company_name nvarchar(100)  NOT NULL,
-    contact_person_name nvarchar(100)  NOT NULL,
-    contact_person_surname nvarchar(100)  NOT NULL,
-    nip_number nvarchar(10)  NOT NULL,
-    CONSTRAINT Company_Customers_pk PRIMARY KEY  (customer_id)
-);
-
--- Table: Customers
-CREATE TABLE Customers (
-    customer_id int  NOT NULL IDENTITY,
-    address nvarchar(100)  NOT NULL,
-    city nvarchar(30)  NOT NULL,
-    region nvarchar(50)  NOT NULL,
-    country nvarchar(50)  NOT NULL,
-    postal_code nvarchar(10)  NOT NULL,
-    contact_email nvarchar(100)  NOT NULL CHECK (contact_email LIKE '%_@__%.__%'),
-    phone nvarchar(15)  NOT NULL,
-    CONSTRAINT Customers_pk PRIMARY KEY  (customer_id)
-);
-
--- Table: Individual_Customers
-CREATE TABLE Individual_Customers (
-    customer_id int  NOT NULL,
-    name nvarchar(100)  NOT NULL,
-    surname nvarchar(100)  NOT NULL,
-    title_of_courtesy nvarchar(10)  NOT NULL,
-    CONSTRAINT Individual_Customers_pk PRIMARY KEY  (customer_id)
-);
-
--- Table: Order_Details
-CREATE TABLE Order_Details (
-    order_id int  NOT NULL,
-    product_id int  NOT NULL,
-    quantity int  NOT NULL CHECK (quantity > 0),
-    unit_price money  NOT NULL CHECK (unit_price > 0),
-    extra_remarks nvarchar(200)  NULL,
-    CONSTRAINT Order_Details_pk PRIMARY KEY  (order_id,product_id)
-);
-
--- Table: Orders
-CREATE TABLE Orders (
-    order_id int  NOT NULL IDENTITY,
-    customer_id int  NOT NULL,
-    order_date date  NOT NULL,
-    required_date date  NOT NULL,
-    delivery_date date  NULL,
-    discount decimal(5,4)  NOT NULL CHECK (discount BETWEEN 0 AND 1 ),
-    CONSTRAINT required_date_after_order CHECK (required_date >= order_date),
-    CONSTRAINT delivery_date_after_order CHECK (delivery_date >= order_date),
-    CONSTRAINT Orders_pk PRIMARY KEY  (order_id)
-);
-
--- Table: Parts
-CREATE TABLE Parts (
-    part_id int  NOT NULL IDENTITY,
-    part_name nvarchar(100)  NOT NULL,
-    part_cost money  NOT NULL CHECK (part_cost >= 0),
-    supplier_id int  NOT NULL,
-    units_in_stock int  NOT NULL CHECK (units_in_stock >= 0),
-    units_on_order int  NOT NULL CHECK (units_on_order >= 0),
-    reorder_level int  NOT NULL CHECK (reorder_level >= 0),
-    CONSTRAINT Parts_pk PRIMARY KEY  (part_id)
-);
-
--- Table: Payments
-CREATE TABLE Payments (
-    order_id int  NOT NULL,
-    paid_amount money  NOT NULL CHECK (paid_amount > 0),
-    payment_type nvarchar(20)  NOT NULL,
-    payment_date datetime  NOT NULL,
-    CONSTRAINT Payments_pk PRIMARY KEY  (order_id)
-);
-
--- Table: Product_Parts
-CREATE TABLE Product_Parts (
-    product_id int  NOT NULL,
-    part_id int  NOT NULL,
-    quantity int  NOT NULL CHECK (quantity >= 0),
-    CONSTRAINT Product_Parts_pk PRIMARY KEY  (part_id,product_id)
-);
-
--- Table: Production
-CREATE TABLE Production (
-    production_id int  NOT NULL IDENTITY,
-    product_id int  NOT NULL,
-    assembly_line int  NOT NULL,
-    manufacturing_cost money  NOT NULL CHECK (manufacturing_cost >= 0),
-    quantity int  NOT NULL CHECK (quantity >= 0),
-    production_startdate datetime  NULL,
-    production_enddate datetime  NULL,
-    order_id int  NULL,
-    CONSTRAINT production_startdate_bef_enddate CHECK (production_startdate <= production_enddate),
-    CONSTRAINT Production_pk PRIMARY KEY  (production_id)
-);
-
--- Table: Products
-CREATE TABLE Products (
-    product_id int  NOT NULL IDENTITY,
-    product_name nvarchar(100)  NOT NULL,
-    manufacturing_cost money  NOT NULL CHECK (manufacturing_cost >= 0),
-    category_id int  NOT NULL,
-    production_time_unit int  NOT NULL CHECK (production_time_unit >= 0),
-    quantity_on_stock int  NOT NULL CHECK (quantity_on_stock >= 0),
-    warehouse_sector int  NOT NULL CHECK (warehouse_sector >=0),
-    production_level int  NOT NULL CHECK (production_level >= 0),
-    CONSTRAINT ProductId PRIMARY KEY  (product_id)
-);
--- Table: Suppliers
-CREATE TABLE Suppliers (
-    supplier_id int  NOT NULL IDENTITY,
-    name nvarchar(50)  NOT NULL,
-    address nvarchar(100)  NOT NULL,
-    city nvarchar(30)  NOT NULL,
-    region nvarchar(50)  NOT NULL,
-    postal_code nvarchar(10)  NOT NULL,
-    country nvarchar(30)  NOT NULL,
-    contact_email nvarchar(100)  NOT NULL CHECK (contact_email LIKE '%_@__%.__%'),
-    phone nvarchar(15)  NOT NULL,
-    delivery_days int  NOT NULL CHECK (delivery_days >= 0),
-    CONSTRAINT Suppliers_pk PRIMARY KEY  (supplier_id)
-);
-
--- foreign keys
 -- Reference: AssemblyLines_Category (table: Categories)
 ALTER TABLE Categories ADD CONSTRAINT AssemblyLines_Category
     FOREIGN KEY (assembly_line)
@@ -635,7 +510,6 @@ ALTER TABLE Production ADD CONSTRAINT Production_AssemblyLines
 ALTER TABLE Production ADD CONSTRAINT Production_Product
     FOREIGN KEY (product_id)
     REFERENCES Products (product_id);
-
 ```
 
 - Opis: (opis tabeli, komentarz)
