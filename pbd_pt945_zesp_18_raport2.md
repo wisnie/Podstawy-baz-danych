@@ -52,21 +52,21 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 
 ### Products
 
-| Kolumna         | Typ         | Klucz  | Opis/Uwagi                                            |
-| --------------- | ----------- | ------ | ----------------------------------------------------- |
-| product_id      | int         | główny | Identyfikator produktu                                |
-| product_name    | nvarchar(100) |        | Nazwa produktu                                        |
-| unit_price      | money         |    | Koszt wyprodukowania jednej sztuki (włącznie z częściami)  |
-| manufactoring_cost      | money         |    | Koszt wyprodukowania jednej sztuki (robocizna)  
-| category_id     | int         | obcy   | Identyfikator kategorii                               |
-| production_time_unit | int         |        | Jednostka określająca całkowitą liczbę jednostek czasu, w której produkowany jest dany produkt. 10 jednostek to jedna roboczogodzina na taśmie produkcyjnej. |
-| quantity_in_stock | int |              | Liczba sztuk na magazynie                                                            |
-| warehouse_sector            | int |              | Sektor w magazynie, przy którym znajduje się produkt                                 |
-| production_level  | int |              | Liczba sztuk produktu do której dąży się w przypadku mniejszych obrotów na produkcji |
-| discontinued  | bit          |        | Określa, czy część została wycofana |
-
+| Kolumna              | Typ           | Klucz  | Opis/Uwagi                                                                                                                                                   |
+| -------------------- | ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| product_id           | int           | główny | Identyfikator produktu                                                                                                                                       |
+| product_name         | nvarchar(100) |        | Nazwa produktu                                                                                                                                               |
+| unit_price           | money         |        | Koszt wyprodukowania jednej sztuki (włącznie z częściami)                                                                                                    |
+| manufactoring_cost   | money         |        | Koszt wyprodukowania jednej sztuki (robocizna)                                                                                                               |
+| category_id          | int           | obcy   | Identyfikator kategorii                                                                                                                                      |
+| production_time_unit | int           |        | Jednostka określająca całkowitą liczbę jednostek czasu, w której produkowany jest dany produkt. 10 jednostek to jedna roboczogodzina na taśmie produkcyjnej. |
+| quantity_in_stock    | int           |        | Liczba sztuk na magazynie                                                                                                                                    |
+| warehouse_sector     | int           |        | Sektor w magazynie, przy którym znajduje się produkt                                                                                                         |
+| production_level     | int           |        | Liczba sztuk produktu do której dąży się w przypadku mniejszych obrotów na produkcji                                                                         |
+| discontinued         | bit           |        | Określa, czy część została wycofana                                                                                                                          |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -87,6 +87,7 @@ CREATE TABLE Assembly_Lines (
 | quantity   | int |              | Liczba części o identyfikatorze part_id potrzebna do produkcji produktu o identyfikatorze product_id |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -100,18 +101,19 @@ CREATE TABLE Assembly_Lines (
 
 ### Parts
 
-| Kolumna        | Typ          | Klucz  | Opis/Uwagi                                              |
-| -------------- | ------------ | ------ | ------------------------------------------------------- |
-| part_id        | int          | główny | Identyfikator części                                    |
+| Kolumna        | Typ           | Klucz  | Opis/Uwagi                                              |
+| -------------- | ------------- | ------ | ------------------------------------------------------- |
+| part_id        | int           | główny | Identyfikator części                                    |
 | part_name      | nvarchar(100) |        | Nazwa części                                            |
-| part_cost      | money        |        | Cena jednostkowa części                                 |
-| supplier_id    | int          | obcy   | Identyfikator dostawcy                                  |
-| units_in_stock | int          |        | Liczba części w magazynie                               |
-| units_on_order | int          |        | Liczba części zamówionych (w drodze)                    |
-| reorder_level  | int          |        | Liczba units_in_stock przy której należy domówić części |
-| discontinued  | bit          |        | Określa, czy część została wycofana |
+| part_cost      | money         |        | Cena jednostkowa części                                 |
+| supplier_id    | int           | obcy   | Identyfikator dostawcy                                  |
+| units_in_stock | int           |        | Liczba części w magazynie                               |
+| units_on_order | int           |        | Liczba części zamówionych (w drodze)                    |
+| reorder_level  | int           |        | Liczba units_in_stock przy której należy domówić części |
+| discontinued   | bit           |        | Określa, czy część została wycofana                     |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -125,20 +127,21 @@ CREATE TABLE Assembly_Lines (
 
 ### Suppliers
 
-| Kolumna       | Typ          | Klucz  | Opis/Uwagi                                                                  |
-| ------------- | ------------ | ------ | --------------------------------------------------------------------------- |
-| supplier_id   | int          | główny | Identyfikator dostawcy                                                      |
+| Kolumna       | Typ           | Klucz  | Opis/Uwagi                                                                  |
+| ------------- | ------------- | ------ | --------------------------------------------------------------------------- |
+| supplier_id   | int           | główny | Identyfikator dostawcy                                                      |
 | name          | nvarchar(50)  |        | Nazwa firmy dostarczającej części                                           |
 | adress        | nvarchar(100) |        | Ulica i numer budynku                                                       |
-| city          | nvarchar(30) |        | Miasto siedziby firmy                                                       |
-| region        | nvarchar(50) |        | Województwo/stan/land                                                       |
-| postal_code   | nvarchar (10)      |        | Kod pocztowy                                                                |
+| city          | nvarchar(30)  |        | Miasto siedziby firmy                                                       |
+| region        | nvarchar(50)  |        | Województwo/stan/land                                                       |
+| postal_code   | nvarchar (10) |        | Kod pocztowy                                                                |
 | country       | nvarchar(30)  |        | Kraj                                                                        |
-| contact_email | nvarchar(100) |        | Adres email                                                |
-| phone         | nvarchar (15)       |        | Numer telefonu                                       |
-| delivery_days | int          |        | Średni oczekiwany czas dostawy (do oszacowania czasu realizacji zamówienia) |
+| contact_email | nvarchar(100) |        | Adres email                                                                 |
+| phone         | nvarchar (15) |        | Numer telefonu                                                              |
+| delivery_days | int           |        | Średni oczekiwany czas dostawy (do oszacowania czasu realizacji zamówienia) |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -152,13 +155,14 @@ CREATE TABLE Assembly_Lines (
 
 ### Categories
 
-| Kolumna       | Typ         | Klucz  | Opis/Uwagi               |
-| ------------- | ----------- | ------ | ------------------------ |
-| category_id   | int         | główny | Identyfikator kategorii  |
-| category_name | nvarchar(50)|        | Nazwa kategorii          |
-| assembly_line | int         | obcy   | Numer zespołu linii produkcyjnych |
+| Kolumna       | Typ          | Klucz  | Opis/Uwagi                        |
+| ------------- | ------------ | ------ | --------------------------------- |
+| category_id   | int          | główny | Identyfikator kategorii           |
+| category_name | nvarchar(50) |        | Nazwa kategorii                   |
+| assembly_line | int          | obcy   | Numer zespołu linii produkcyjnych |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -179,6 +183,7 @@ CREATE TABLE Assembly_Lines (
 | max_capability | int |        | Maksymalna liczba produktów wytwarzanych na taśmie w ciągu dnia |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -192,17 +197,18 @@ CREATE TABLE Assembly_Lines (
 
 ### Production
 
-| Kolumna              | Typ      | Klucz        | Opis/Uwagi                                     |
-| -------------------- | -------- | ------------ | ---------------------------------------------- |
-| production_id           | int      | główny | Identyfikator produkcji  
-| product_id           | int      | główny, obcy | Identyfikator produktu                         |
-| assembly_line        | int      | główny, obcy | Numer taśmy produkcyjnej                       |                       |
-| manufactoring_cost      | money         |    | Koszt wyprodukowania jednej sztuki (włącznie z częściami - koszt ten może się zmieniać z biegiem czasu)  
-| quantity             | int      |              | Liczba wyprodukowanego produktu w danej partii |
-| production_startdate | datetime |              | Data rozpoczęcia produkcji                                |
-| production_enddate   | datetime |              | Data zakończenia produkcji                               |
+| Kolumna              | Typ      | Klucz        | Opis/Uwagi                                                                                              |
+| -------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------- | --- |
+| production_id        | int      | główny       | Identyfikator produkcji                                                                                 |
+| product_id           | int      | główny, obcy | Identyfikator produktu                                                                                  |
+| assembly_line        | int      | główny, obcy | Numer taśmy produkcyjnej                                                                                |     |
+| manufactoring_cost   | money    |              | Koszt wyprodukowania jednej sztuki (włącznie z częściami - koszt ten może się zmieniać z biegiem czasu) |
+| quantity             | int      |              | Liczba wyprodukowanego produktu w danej partii                                                          |
+| production_startdate | datetime |              | Data rozpoczęcia produkcji                                                                              |
+| production_enddate   | datetime |              | Data zakończenia produkcji                                                                              |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -216,17 +222,18 @@ CREATE TABLE Assembly_Lines (
 
 ### Orders
 
-| Kolumna       | Typ           | Klucz  | Opis/Uwagi                                 |
-| ------------- | ------------- | ------ | ------------------------------------------ |
-| order_id      | int           | główny | Identyfikator zamówienia                   |
-| customer_id   | int           | obcy   | Identyfikator klienta                      |
-| order_date    | date          |        | Data złożenia zamówienia                   |
-| estimated_date | date          |        | Zadeklarowana data dostarczenia zamówienia |
-| delivery_date | date          |        | Rzeczywista data dostarczenia zamówienia   |
-| discount      | decimal(5,4) |        | Zniżka na całe zamówienie                  ||
-| order_status      | nvarchar(5) |        | Aktualny status zamówienia                 ||
+| Kolumna        | Typ          | Klucz  | Opis/Uwagi                                 |
+| -------------- | ------------ | ------ | ------------------------------------------ | --- |
+| order_id       | int          | główny | Identyfikator zamówienia                   |
+| customer_id    | int          | obcy   | Identyfikator klienta                      |
+| order_date     | date         |        | Data złożenia zamówienia                   |
+| estimated_date | date         |        | Zadeklarowana data dostarczenia zamówienia |
+| delivery_date  | date         |        | Rzeczywista data dostarczenia zamówienia   |
+| discount       | decimal(5,4) |        | Zniżka na całe zamówienie                  |     |
+| order_status   | nvarchar(5)  |        | Aktualny status zamówienia                 |     |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -240,15 +247,16 @@ CREATE TABLE Assembly_Lines (
 
 ### OrderDetails
 
-| Kolumna            | Typ          | Klucz        | Opis/Uwagi                         |
-| ------------------ | ------------ | ------------ | ---------------------------------- |
-| order_id           | int          | główny, obcy | Identyfikator zamówienia           |
-| product_id         | int          | główny, obcy | Identyfikator produktu             |
-| quantity           | int          |              | Liczba zamówionych sztuk           |
-| unit_price         | money        |              | Cena za sztukę     |                |
-| extra_remarks      | nvarchar(200) |              | Uwagi dodatkowe                    |
+| Kolumna       | Typ           | Klucz        | Opis/Uwagi               |
+| ------------- | ------------- | ------------ | ------------------------ | --- |
+| order_id      | int           | główny, obcy | Identyfikator zamówienia |
+| product_id    | int           | główny, obcy | Identyfikator produktu   |
+| quantity      | int           |              | Liczba zamówionych sztuk |
+| unit_price    | money         |              | Cena za sztukę           |     |
+| extra_remarks | nvarchar(200) |              | Uwagi dodatkowe          |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -262,14 +270,15 @@ CREATE TABLE Assembly_Lines (
 
 ### Payments
 
-| Kolumna           | Typ         | Klucz        | Opis/Uwagi            |
-| ----------------- | ----------- | ------------ | --------------------- |
-| order_id       | int         | główny, obcy | Identyfikator zamówienia |
-| paid_amount              | money |              | Zapłacona kwota          |
-| payment_type           | nvarchar(20) |              | Typ płatności (np. karta przy odbiorze, BLIK, przelew)      |
-| payment_date | datetime |              | Data zaksięgowania przelewu              |
+| Kolumna      | Typ          | Klucz        | Opis/Uwagi                                             |
+| ------------ | ------------ | ------------ | ------------------------------------------------------ |
+| order_id     | int          | główny, obcy | Identyfikator zamówienia                               |
+| paid_amount  | money        |              | Zapłacona kwota                                        |
+| payment_type | nvarchar(20) |              | Typ płatności (np. karta przy odbiorze, BLIK, przelew) |
+| payment_date | datetime     |              | Data zaksięgowania przelewu                            |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -283,14 +292,15 @@ CREATE TABLE Assembly_Lines (
 
 ### Cancelled_Orders
 
-| Kolumna           | Typ         | Klucz        | Opis/Uwagi            |
-| ----------------- | ----------- | ------------ | --------------------- |
-| order_id       | int         | główny, obcy | Identyfikator zamówienia |
-| cancel_date              | datetime |              | Data anulowania zamówienia          |
-| reason           | nvarchar(500) |              | Powód anulowania zamówienia      |
-| compensation | money |              | Wartość dodatkowej opłaty za anulowane zamówienie              |
+| Kolumna      | Typ           | Klucz        | Opis/Uwagi                                        |
+| ------------ | ------------- | ------------ | ------------------------------------------------- |
+| order_id     | int           | główny, obcy | Identyfikator zamówienia                          |
+| cancel_date  | datetime      |              | Data anulowania zamówienia                        |
+| reason       | nvarchar(500) |              | Powód anulowania zamówienia                       |
+| compensation | money         |              | Wartość dodatkowej opłaty za anulowane zamówienie |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -304,18 +314,19 @@ CREATE TABLE Assembly_Lines (
 
 ### Customers
 
-| Kolumna       | Typ          | Klucz  | Opis/Uwagi                                           |
+| Kolumna       | Typ            | Klucz  | Opis/Uwagi                                           |
 | ------------- | -------------- | ------ | ---------------------------------------------------- |
-| customer_id   | int          | główny | Identyfikator klienta                                |
-| address        | nvarchar (100)    |        | Ulica i numer budynku                                |
-| city          | nvarchar(30) |        | Miasto siedziby klienta/ Miasto zamieszkania klienta |
-| region        | nvarchar(50) |        | Województwo/stan/land                                |
-| country       | nvarchar(50)  |        | Kraj                                                 |
-| postal_code   | nvarchar(10)       |        | Kod pocztowy                                         |
-| contact_email | nvarchar(100) |        | Email                                                |
-| phone         | nvarchar (15)       |        | Numer telefonu                                       |
+| customer_id   | int            | główny | Identyfikator klienta                                |
+| address       | nvarchar (100) |        | Ulica i numer budynku                                |
+| city          | nvarchar(30)   |        | Miasto siedziby klienta/ Miasto zamieszkania klienta |
+| region        | nvarchar(50)   |        | Województwo/stan/land                                |
+| country       | nvarchar(50)   |        | Kraj                                                 |
+| postal_code   | nvarchar(10)   |        | Kod pocztowy                                         |
+| contact_email | nvarchar(100)  |        | Email                                                |
+| phone         | nvarchar (15)  |        | Numer telefonu                                       |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -329,14 +340,15 @@ CREATE TABLE Assembly_Lines (
 
 ### IndividualCustomer
 
-| Kolumna           | Typ         | Klucz        | Opis/Uwagi            |
-| ----------------- | ----------- | ------------ | --------------------- |
-| customer_id       | int         | główny, obcy | Identyfikator klienta |
+| Kolumna           | Typ           | Klucz        | Opis/Uwagi            |
+| ----------------- | ------------- | ------------ | --------------------- |
+| customer_id       | int           | główny, obcy | Identyfikator klienta |
 | name              | nvarchar(100) |              | Imię klienta          |
 | surname           | nvarchar(100) |              | Nazwisko klienta      |
-| title_of_courtesy | nvarchar(10) |              | Pan/Pani              |
+| title_of_courtesy | nvarchar(10)  |              | Pan/Pani              |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -350,15 +362,16 @@ CREATE TABLE Assembly_Lines (
 
 ### CompanyCustomer
 
-| Kolumna                | Typ          | Klucz        | Opis/Uwagi                 |
-| ---------------------- | ------------ | ------------ | -------------------------- |
-| customer_id            | int          | główny, obcy | Identyfikator klienta      |
-| company_name           | nvarchar(100)  |              | Nazwa firmy                |
+| Kolumna                | Typ           | Klucz        | Opis/Uwagi                 |
+| ---------------------- | ------------- | ------------ | -------------------------- |
+| customer_id            | int           | główny, obcy | Identyfikator klienta      |
+| company_name           | nvarchar(100) |              | Nazwa firmy                |
 | contact_person_name    | nvarchar(100) |              | Imię osoby kontaktowej     |
 | contact_person_surname | nvarchar(100) |              | Nazwisko osoby kontaktowej |
-| nip_number             | nvarchar (10)          |              | Numer NIP firmy            |
+| nip_number             | nvarchar (10) |              | Numer NIP firmy            |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -372,15 +385,16 @@ CREATE TABLE Assembly_Lines (
 
 ### Calendar
 
-| Kolumna                | Typ          | Klucz        | Opis/Uwagi                 |
-| ---------------------- | ------------ | ------------ | -------------------------- |
-| calendar_date            | date          | główny | Data      |
-| day_of_week           | tinyint  |              | Dzień tygodnia               |
-| weekend          | bit  |              | Określa, czy data wypada w sobotę lub niedzielę               |
-| national_holiday          | bit  |              | Określa, czy data jest świętem narodowym               |
-| holiday_name          | nvarchar(50)  |              | Nazwa święta narodowego              |
+| Kolumna          | Typ          | Klucz  | Opis/Uwagi                                      |
+| ---------------- | ------------ | ------ | ----------------------------------------------- |
+| calendar_date    | date         | główny | Data                                            |
+| day_of_week      | tinyint      |        | Dzień tygodnia                                  |
+| weekend          | bit          |        | Określa, czy data wypada w sobotę lub niedzielę |
+| national_holiday | bit          |        | Określa, czy data jest świętem narodowym        |
+| holiday_name     | nvarchar(50) |        | Nazwa święta narodowego                         |
 
 #### Kod DDL
+
 ```sql
 -- Table: Assembly_Lines
 CREATE TABLE Assembly_Lines (
@@ -652,12 +666,129 @@ select a from tab1
 -- ...
 ```
 
+1. **AddNewProduct** - dodaje nowy produkt do bazy danych.
+
+```
+CREATE PROCEDURE AddNewProduct (@product_name NVARCHAR(100), @unit_price MONEY, @manufactoring_cost MONEY, @category_id INT, @production_time_unit INT, @quantity_in_stock INT, @warehouse_sector INT, @production_level INT, @discontinued BIT)
+AS
+BEGIN
+    BEGIN TRY
+        IF EXISTS(
+            SELECT *
+            FROM Products
+            WHERE product_name = @product_name
+            )
+            BEGIN
+                THROW 52000, N'Product already exists', 1;
+            END
+        INSERT INTO Products(product_name, unit_price, manufacturing_cost, category_id, production_time_unit, quantity_in_stock, warehouse_sector, production_level, discontinued)
+        VALUES(@product_name, @unit_price, @manufactoring_cost, @category_id, @production_time_unit, @quantity_in_stock, @warehouse_sector, @production_level, @discontinued)
+    END TRY
+    BEGIN CATCH
+        DECLARE @msg NVARCHAR(2048) = N'ERROR: ' + ERROR_MESSAGE();
+        THROW 52000, @msg, 1;
+    END CATCH
+END
+```
+
+2. **AddNewIndividualCustomer** - dodaje nowego klienta indywidualnego do bazy danych.
+
+```
+CREATE PROCEDURE AddNewIndividualCustomer(@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50), @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100), @phone nvarchar(15), @name NVARCHAR(100), @surname NVARCHAR(100), @title_of_courtesy NVARCHAR(10))
+AS
+BEGIN
+    BEGIN TRY
+        IF EXISTS(
+            SELECT *
+            FROM Individual_Customers
+            WHERE name = @name AND surname = @surname
+            )
+            BEGIN
+                THROW 52000, N'Client already exists', 1;
+            END
+        INSERT INTO Customers(address, city, region, country, postal_code, contact_email, phone)
+        VALUES(@adress, @city, @region, @country, @postal_code, @contact_email, @phone)
+        INSERT INTO Individual_Customers(name, surname, title_of_courtesy)
+        VALUES (@name, @surname, @title_of_courtesy)
+    END TRY
+    BEGIN CATCH
+        DECLARE @msg NVARCHAR(2048) = N'ERROR: ' + ERROR_MESSAGE();
+        THROW 52000, @msg, 1;
+    END CATCH
+END
+```
+
+3. **AddNewCompanyCustomer** - dodaje nową firmę będącą klientem do bazy danych.
+
+```
+CREATE PROCEDURE AddNewCompanyCustomer(@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50), @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100), @phone nvarchar(15), @company_name NVARCHAR(100), @contact_person_name NVARCHAR(100), @contact_person_surname NVARCHAR(100), @nip_number NVARCHAR(10))
+AS
+BEGIN
+    BEGIN TRY
+        IF EXISTS(
+            SELECT *
+            FROM Company_Customers
+            WHERE company_name = @company_name
+            )
+            BEGIN
+                THROW 52000, N'Client already exists', 1;
+            END
+        INSERT INTO Customers(address, city, region, country, postal_code, contact_email, phone)
+        VALUES(@adress, @city, @region, @country, @postal_code, @contact_email, @phone)
+        INSERT INTO Company_Customers(company_name, contact_person_name, contact_person_surname, nip_number)
+        VALUES (@company_name, @contact_person_name, @contact_person_surname, @nip_number)
+    END TRY
+    BEGIN CATCH
+        DECLARE @msg NVARCHAR(2048) = N'ERROR: ' + ERROR_MESSAGE();
+        THROW 52000, @msg, 1;
+    END CATCH
+END
+```
+
 ## Triggery
 
 (dla każdego triggera należy wkleić kod polecenia definiującego trigger wraz z komentarzem)
 
 ```sql
 -- ...
+```
+
+1. **UpdateProductionAndWarehouseWhenNewOrder** - realizuje automatyczną obsługę stanu magazynu i planu produkcji po złożeniu zamówienia. Po dodaniu pozycji do Order_Details zmniejsza stan magazynu produktu. W przypadku braku wystarczającej liczby produktów na magazynie automatycznie tworzy wpis w tabeli Production dla brakującej ilości oraz ustawia stan magazynowy na zero.
+
+```
+CREATE TRIGGER UpdateProductionAndWarehouseWhenNewOrder
+ON Order_Details
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Aktualizacja magazynu --
+    UPDATE p
+    SET p.quantity_in_stock = p.quantity_in_stock - i.quantity -- na razie może być ujemne
+    FROM Products p
+    JOIN INSERTED i ON p.product_id = i.product_id;
+
+    -- Dodanie do produkcji, jeśli magazyn spadł poniżej zera --
+    INSERT INTO Production (
+        product_id,
+        quantity,
+        order_id
+    )
+    SELECT
+        i.product_id,
+        ABS(p.quantity_in_stock),
+        i.order_id
+    FROM Products p
+    JOIN INSERTED i ON p.product_id = i.product_id
+    WHERE p.quantity_in_stock < 0;
+
+    -- Korekta magazynu --
+    UPDATE Products
+    SET quantity_in_stock = 0
+    WHERE quantity_in_stock < 0;
+END;
+GO
 ```
 
 # 4. Inne
