@@ -208,7 +208,7 @@ CREATE TABLE Assembly_Lines (
 
 ### Production
 
-| Kolumna              | Typ      | Klucz        | Opis/Uwagi                                                                                              |
+| Kolumna              | Typ      | Klucz        | Opis/Uwagi |                                                                                             |
 | -------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------- | --- |
 | production_id        | int      | główny       | Identyfikator produkcji                                                                                 |
 | product_id           | int      | główny, obcy | Identyfikator produktu                                                                                  |
@@ -238,7 +238,7 @@ CREATE TABLE Production (
 
 ### Orders
 
-| Kolumna        | Typ          | Klucz  | Opis/Uwagi                                 |
+| Kolumna        | Typ          | Klucz  | Opis/Uwagi                                 ||
 | -------------- | ------------ | ------ | ------------------------------------------ | --- |
 | order_id       | int          | główny | Identyfikator zamówienia                   |
 | customer_id    | int          | obcy   | Identyfikator klienta                      |
@@ -267,7 +267,7 @@ CREATE TABLE Orders (
 
 ### OrderDetails
 
-| Kolumna       | Typ           | Klucz        | Opis/Uwagi               |
+| Kolumna       | Typ           | Klucz        | Opis/Uwagi               ||
 | ------------- | ------------- | ------------ | ------------------------ | --- |
 | order_id      | int           | główny, obcy | Identyfikator zamówienia |
 | product_id    | int           | główny, obcy | Identyfikator produktu   |
@@ -332,6 +332,28 @@ CREATE TABLE Cancelled_Orders (
     CONSTRAINT Cancelled_Orders_pk PRIMARY KEY  (order_id)
 );
 ```
+
+### Order_Status_History
+
+| Kolumna          | Typ          | Klucz  | Opis/Uwagi                                      |
+| ---------------- | ------------ | ------ | ----------------------------------------------- |
+| order_id    | int         | główny | ID zamówienia                                            |
+| order_status      | nvarchar(5)      |        | Skrót statusu zamówienia                                  |
+| status_change_date          | date          |        | Data ostatniej zmienay statusu |
+
+#### Kod DDL
+
+```sql
+-- Table: Calendar
+CREATE TABLE Order_Status_History
+(
+    order_id           int         NOT NULL,
+    order_status       nvarchar(5) NOT NULL,
+    status_change_date date        NOT NULL,
+    CONSTRAINT order_id PRIMARY KEY (order_id)
+);
+```
+
 
 ### Customers
 
@@ -754,7 +776,7 @@ GO
 
 1. **AddNewProduct** - dodaje nowy produkt do bazy danych.
 
-```
+```sql
 CREATE PROCEDURE AddNewProduct (@product_name NVARCHAR(100), @unit_price MONEY, @manufactoring_cost MONEY, @category_id INT, @production_time_unit INT, @quantity_in_stock INT, @warehouse_sector INT, @production_level INT, @discontinued BIT)
 AS
 BEGIN
@@ -779,7 +801,7 @@ END
 
 2. **AddNewIndividualCustomer** - dodaje nowego klienta indywidualnego do bazy danych.
 
-```
+```sql
 CREATE PROCEDURE AddNewIndividualCustomer(@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50), @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100), @phone nvarchar(15), @name NVARCHAR(100), @surname NVARCHAR(100), @title_of_courtesy NVARCHAR(10))
 AS
 BEGIN
@@ -806,7 +828,7 @@ END
 
 3. **AddNewCompanyCustomer** - dodaje nową firmę będącą klientem do bazy danych.
 
-```
+```sql
 CREATE PROCEDURE AddNewCompanyCustomer(@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50), @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100), @phone nvarchar(15), @company_name NVARCHAR(100), @contact_person_name NVARCHAR(100), @contact_person_surname NVARCHAR(100), @nip_number NVARCHAR(10))
 AS
 BEGIN
@@ -856,7 +878,7 @@ END;
 
 1. **UpdateProductionAndWarehouseWhenNewOrder** - realizuje automatyczną obsługę stanu magazynu i planu produkcji po złożeniu zamówienia. Po dodaniu pozycji do Order_Details zmniejsza stan magazynu produktu. W przypadku braku wystarczającej liczby produktów na magazynie automatycznie tworzy wpis w tabeli Production dla brakującej ilości oraz ustawia stan magazynowy na zero.
 
-```
+```sql
 CREATE TRIGGER UpdateProductionAndWarehouseWhenNewOrder
 ON Order_Details
 AFTER INSERT
