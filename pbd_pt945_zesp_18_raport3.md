@@ -208,7 +208,7 @@ CREATE TABLE Assembly_Lines (
 
 ### Production
 
-| Kolumna              | Typ      | Klucz        | Opis/Uwagi |                                                                                             |
+| Kolumna              | Typ      | Klucz        | Opis/Uwagi                                                                                              |     |
 | -------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------- | --- |
 | production_id        | int      | główny       | Identyfikator produkcji                                                                                 |
 | product_id           | int      | główny, obcy | Identyfikator produktu                                                                                  |
@@ -238,7 +238,7 @@ CREATE TABLE Production (
 
 ### Orders
 
-| Kolumna        | Typ          | Klucz  | Opis/Uwagi                                 ||
+| Kolumna        | Typ          | Klucz  | Opis/Uwagi                                 |     |
 | -------------- | ------------ | ------ | ------------------------------------------ | --- |
 | order_id       | int          | główny | Identyfikator zamówienia                   |
 | customer_id    | int          | obcy   | Identyfikator klienta                      |
@@ -267,7 +267,7 @@ CREATE TABLE Orders (
 
 ### OrderDetails
 
-| Kolumna       | Typ           | Klucz        | Opis/Uwagi               ||
+| Kolumna       | Typ           | Klucz        | Opis/Uwagi               |     |
 | ------------- | ------------- | ------------ | ------------------------ | --- |
 | order_id      | int           | główny, obcy | Identyfikator zamówienia |
 | product_id    | int           | główny, obcy | Identyfikator produktu   |
@@ -335,11 +335,11 @@ CREATE TABLE Cancelled_Orders (
 
 ### Order_Status_History
 
-| Kolumna          | Typ          | Klucz  | Opis/Uwagi                                      |
-| ---------------- | ------------ | ------ | ----------------------------------------------- |
-| order_id    | int         | główny | ID zamówienia                                            |
-| order_status      | nvarchar(5)      |        | Skrót statusu zamówienia                                  |
-| status_change_date          | date          |        | Data ostatniej zmienay statusu |
+| Kolumna            | Typ         | Klucz  | Opis/Uwagi                     |
+| ------------------ | ----------- | ------ | ------------------------------ |
+| order_id           | int         | główny | ID zamówienia                  |
+| order_status       | nvarchar(5) |        | Skrót statusu zamówienia       |
+| status_change_date | date        |        | Data ostatniej zmienay statusu |
 
 #### Kod DDL
 
@@ -353,7 +353,6 @@ CREATE TABLE Order_Status_History
     CONSTRAINT order_id PRIMARY KEY (order_id)
 );
 ```
-
 
 ### Customers
 
@@ -433,11 +432,11 @@ CREATE TABLE Company_Customers (
 
 ### Calendar
 
-| Kolumna          | Typ          | Klucz  | Opis/Uwagi                                      |
-| ---------------- | ------------ | ------ | ----------------------------------------------- |
-| calendar_date    | date         | główny | Data                                            |
-| day_off      | tinyint      |        | Dzień tygodnia                                  |
-| comment     | nvarchar(50) |        | Komentarz dot. przyczyny święta                         |
+| Kolumna       | Typ          | Klucz  | Opis/Uwagi                      |
+| ------------- | ------------ | ------ | ------------------------------- |
+| calendar_date | date         | główny | Data                            |
+| day_off       | tinyint      |        | Dzień tygodnia                  |
+| comment       | nvarchar(50) |        | Komentarz dot. przyczyny święta |
 
 #### Kod DDL
 
@@ -537,6 +536,47 @@ ALTER TABLE Order_Status_History ADD CONSTRAINT Order_Status_History_Orders
 
 # 3. Widoki, procedury/funkcje, triggery
 
+## Widoki
+
+1. **Individual_Client_Orders** - dla każdego klienta indywidualnego pokazuje jego łączną liczbę złożonych zamówień, liczbę zamówień w trakcie realizacji, łączną sumę wydanych pieniędzy w sklepie (po zniżkach), łączną sumę otrzymanych rabatów, liczbę odwołanych zamówień oraz dług.
+
+```sql
+CREATE VIEW Individual_Client_Orders AS (
+SELECT c.customer_id, ic.name, ic.surname,
+       ISNULL(SUM(o.order_id), 0) AS total_orders
+       COUNT(*)-COUNT(o.delivery_date) AS handled_orders,
+       ISNULL(SUM(od.quantity * od.unit_price * (1 - o.discount)),0) AS total_money_spend,
+       ISNULL(SUM(od.quantity * od.unit_price * o.discount),0) AS total_money_saved,
+       COUNT(co.order_id) AS cancelled_orders_counter,
+       ISNULL(SUM(od.quantity * od.unit_price * (1 - o.discount)),0) - SUM(p.paid_amount) AS loan
+FROM Customers c RIGHT JOIN Individual_Customers ic
+        ON c.customer_id = ic.customer_id
+    LEFT JOIN Orders o
+        ON c.customer_id = o.customer_id
+    LEFT JOIN Payments p
+        ON p.order_id = o.order_id
+    LEFT JOIN Cancelled_Orders co
+        ON o.order_id = co.order_id
+    LEFT JOIN Order_Details od
+        ON o.order_id = od.order_id
+GROUP BY c.customer_id, ic.name, ic.surname
+);
+```
+
+2. **ViewCurrentProduction** - wyświetla produkty do wyprodukowania na podanej taśmie produkcyjnej.
+
+```sql
+CREATE PROCEDURE ViewCurrentProduction
+    @assembly_line INT
+AS
+    SELECT p.production_id, p.product_id, product_name, p.quantity, p.production_startdate, p.order_id
+    FROM Production p
+          INNER JOIN Products pr
+                     ON p.product_id = pr.product_id
+    WHERE production_enddate IS NULL
+        AND assembly_line = @assembly_line
+GO
+```
 
 ## Procedury/funkcje
 
@@ -774,7 +814,10 @@ GO
 8. **AddNewProduct** - dodaje nowy produkt do bazy danych.
 
 ```sql
-CREATE PROCEDURE AddNewProduct (@product_name NVARCHAR(100), @unit_price MONEY, @manufactoring_cost MONEY, @category_id INT, @production_time_unit INT, @quantity_in_stock INT, @warehouse_sector INT, @production_level INT, @discontinued BIT)
+CREATE PROCEDURE AddNewProduct
+    (@product_name NVARCHAR(100), @unit_price MONEY, @manufactoring_cost MONEY,
+     @category_id INT, @production_time_unit INT, @quantity_in_stock INT,
+     @warehouse_sector INT, @production_level INT, @discontinued BIT)
 AS
 BEGIN
     BEGIN TRY
@@ -790,8 +833,12 @@ BEGIN
         VALUES(@product_name, @unit_price, @manufactoring_cost, @category_id, @production_time_unit, @quantity_in_stock, @warehouse_sector, @production_level, @discontinued)
     END TRY
     BEGIN CATCH
-        DECLARE @msg NVARCHAR(2048) = N'ERROR: ' + ERROR_MESSAGE();
-        THROW 52000, @msg, 1;
+        IF XACT_STATE() <> 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END
+
+        ;THROW;
     END CATCH
 END
 ```
@@ -799,26 +846,34 @@ END
 9. **AddNewIndividualCustomer** - dodaje nowego klienta indywidualnego do bazy danych.
 
 ```sql
-CREATE PROCEDURE AddNewIndividualCustomer(@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50), @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100), @phone nvarchar(15), @name NVARCHAR(100), @surname NVARCHAR(100), @title_of_courtesy NVARCHAR(10))
+CREATE PROCEDURE AddIndividualCustomer
+    (@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50),
+     @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100),
+     @phone nvarchar(15), @name NVARCHAR(100), @surname NVARCHAR(100),
+     @title_of_courtesy NVARCHAR(10))
 AS
 BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
     BEGIN TRY
-        IF EXISTS(
-            SELECT *
-            FROM Individual_Customers
-            WHERE name = @name AND surname = @surname
-            )
-            BEGIN
-                THROW 52000, N'Client already exists', 1;
-            END
-        INSERT INTO Customers(address, city, region, country, postal_code, contact_email, phone)
-        VALUES(@adress, @city, @region, @country, @postal_code, @contact_email, @phone)
-        INSERT INTO Individual_Customers(name, surname, title_of_courtesy)
-        VALUES (@name, @surname, @title_of_courtesy)
+        BEGIN TRANSACTION;
+            INSERT INTO Customers(address, city, region, country, postal_code, contact_email, phone)
+            VALUES(@adress, @city, @region, @country, @postal_code, @contact_email, @phone)
+
+            DECLARE @customer_id INT = SCOPE_IDENTITY();
+
+            INSERT INTO Individual_Customers(customer_id, name, surname, title_of_courtesy)
+            VALUES (@customer_id, @name, @surname, @title_of_courtesy)
+        COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        DECLARE @msg NVARCHAR(2048) = N'ERROR: ' + ERROR_MESSAGE();
-        THROW 52000, @msg, 1;
+        IF XACT_STATE() <> 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END
+
+        ;THROW;
     END CATCH
 END
 ```
@@ -826,26 +881,43 @@ END
 10. **AddNewCompanyCustomer** - dodaje nową firmę będącą klientem do bazy danych.
 
 ```sql
-CREATE PROCEDURE AddNewCompanyCustomer(@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50), @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100), @phone nvarchar(15), @company_name NVARCHAR(100), @contact_person_name NVARCHAR(100), @contact_person_surname NVARCHAR(100), @nip_number NVARCHAR(10))
+CREATE PROCEDURE AddCompanyCustomer
+    @address NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50),
+    @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100),
+    @phone NVARCHAR(15), @company_name NVARCHAR(100),
+    @contact_person_name NVARCHAR(100), @contact_person_surname NVARCHAR(100),
+    @nip_number NVARCHAR(10)
 AS
 BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
     BEGIN TRY
-        IF EXISTS(
-            SELECT *
-            FROM Company_Customers
-            WHERE company_name = @company_name
-            )
-            BEGIN
-                THROW 52000, N'Client already exists', 1;
-            END
-        INSERT INTO Customers(address, city, region, country, postal_code, contact_email, phone)
-        VALUES(@adress, @city, @region, @country, @postal_code, @contact_email, @phone)
-        INSERT INTO Company_Customers(company_name, contact_person_name, contact_person_surname, nip_number)
-        VALUES (@company_name, @contact_person_name, @contact_person_surname, @nip_number)
+        IF EXISTS(SELECT * FROM Company_Customers WHERE company_name = @company_name)
+        BEGIN
+            DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Company with name "%s" already exists.', @company_name);
+            THROW 51000, @msg, 1;
+        END
+
+        BEGIN TRANSACTION;
+
+            INSERT INTO Customers (address, city, region, country, postal_code, contact_email, phone)
+            VALUES (@address, @city, @region, @country, @postal_code, @contact_email, @phone);
+
+            DECLARE @customer_id INT = SCOPE_IDENTITY();
+
+            INSERT INTO Company_Customers (customer_id, company_name, contact_person_name, contact_person_surname, nip_number)
+            VALUES (@customer_id, @company_name, @contact_person_name, @contact_person_surname, @nip_number);
+
+        COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        DECLARE @msg NVARCHAR(2048) = N'ERROR: ' + ERROR_MESSAGE();
-        THROW 52000, @msg, 1;
+        IF XACT_STATE() <> 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END
+
+        ;THROW;
     END CATCH
 END
 ```
@@ -859,7 +931,7 @@ CREATE PROCEDURE Last_Orders_From_Client
     @DateTo DATE
 AS
 BEGIN
-    SELECT 
+    SELECT
         c.customer_id,
         o.order_id,
         o.order_date,
@@ -868,19 +940,19 @@ BEGIN
         SUM(od.unit_price * od.quantity) * (1 - o.discount) AS total_after_discount,
         o.discount
     FROM Customers c
-    INNER JOIN Orders o 
+    INNER JOIN Orders o
         ON c.customer_id = o.customer_id
-    INNER JOIN Order_Details od 
+    INNER JOIN Order_Details od
         ON o.order_id = od.order_id
-    WHERE 
+    WHERE
         c.customer_id = @CustomerID
         AND o.order_date BETWEEN @DateFrom AND @DateTo
-    GROUP BY 
+    GROUP BY
         c.customer_id,
         o.order_id,
         o.order_date,
         o.discount
-    ORDER BY 
+    ORDER BY
         o.order_date DESC;
 END;
 ```
@@ -894,7 +966,7 @@ CREATE PROCEDURE Top_Product_Groups
     @CategoryID INT
 AS
 BEGIN
-    SELECT 
+    SELECT
         p.product_id,
         p.product_name,
 
@@ -912,11 +984,11 @@ BEGIN
     INNER JOIN Order_Details od ON od.product_id = p.product_id
     INNER JOIN Orders o ON o.order_id = od.order_id
 
-    WHERE 
+    WHERE
         p.category_id = @CategoryID
         AND o.order_date BETWEEN @DateFrom AND @DateTo
 
-    GROUP BY 
+    GROUP BY
         ROLLUP (
             p.product_id,
             p.product_name,
@@ -925,7 +997,7 @@ BEGIN
             DATEPART(WEEK, o.order_date)
         )
 
-    ORDER BY 
+    ORDER BY
         total_after_discount DESC;
 END;
 ```
@@ -938,7 +1010,7 @@ CREATE PROCEDURE Top_Products
     @DateTo DATE
 AS
 BEGIN
-    SELECT 
+    SELECT
         p.product_id,
         p.product_name,
 
@@ -954,10 +1026,10 @@ BEGIN
     INNER JOIN Order_Details od ON od.product_id = p.product_id
     INNER JOIN Orders o ON o.order_id = od.order_id
 
-    WHERE 
+    WHERE
         o.order_date BETWEEN @DateFrom AND @DateTo
 
-    GROUP BY 
+    GROUP BY
         ROLLUP (
             p.product_id,
             p.product_name,
@@ -966,13 +1038,11 @@ BEGIN
             DATEPART(WEEK, o.order_date)
         )
 
-    ORDER BY 
+    ORDER BY
         total_after_discount DESC;
 END;
 
 ```
-
-
 
 ## Triggery
 
@@ -1008,31 +1078,26 @@ AFTER INSERT
 AS
 BEGIN
     SET NOCOUNT ON;
-
-    -- Aktualizacja magazynu --
-    UPDATE p
-    SET p.quantity_in_stock = p.quantity_in_stock - i.quantity
-    FROM Products p
-    JOIN INSERTED i ON p.product_id = i.product_id;
-
-    -- Dodanie do produkcji, jeśli magazyn spadł poniżej zera --
-    INSERT INTO Production (
-        product_id,
-        quantity,
-        order_id
-    )
+    -- Jeżeli liczba zamówionych produktów jest mniejsza od liczby produktów na magzynie
+    -- to aktualizujemy tabelę Production
+    INSERT INTO Production (product_id, quantity, order_id, assembly_line, manufacturing_cost)
     SELECT
         i.product_id,
-        ABS(p.quantity_in_stock),
-        i.order_id
+        i.quantity - p.quantity_in_stock,
+        i.order_id,
+        pr.assembly_line,
+        p.manufacturing_cost * i.quantity
     FROM Products p
     JOIN INSERTED i ON p.product_id = i.product_id
-    WHERE p.quantity_in_stock < 0;
+    JOIN Production pr ON p.product_id = pr.product_id
+    WHERE i.quantity > p.quantity_in_stock; -- warunek
 
-    -- Korekta magazynu --
-    UPDATE Products
-    SET quantity_in_stock = 0
-    WHERE quantity_in_stock < 0;
+    -- Aktualizujemy liczbę produktów na magazynie w Products.
+    UPDATE p
+    SET p.quantity_in_stock
+        = IIF((p.quantity_in_stock - i.quantity) < 0, 0, (p.quantity_in_stock - i.quantity))
+    FROM Products p
+    JOIN INSERTED i ON p.product_id = i.product_id;
 END;
 GO
 ```
