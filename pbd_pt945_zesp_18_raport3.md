@@ -256,7 +256,7 @@ CREATE TABLE Orders (
     order_id int  NOT NULL IDENTITY,
     customer_id int  NOT NULL,
     order_date date  NOT NULL,
-    estimated_date date  NOT NULL,
+    estimated_date date,
     delivery_date date  NULL,
     discount decimal(5,4)  NOT NULL CHECK (discount BETWEEN 0 AND 1 ),
     CONSTRAINT required_date_after_order CHECK (estimated_date >= order_date),
@@ -436,10 +436,8 @@ CREATE TABLE Company_Customers (
 | Kolumna          | Typ          | Klucz  | Opis/Uwagi                                      |
 | ---------------- | ------------ | ------ | ----------------------------------------------- |
 | calendar_date    | date         | główny | Data                                            |
-| day_of_week      | tinyint      |        | Dzień tygodnia                                  |
-| weekend          | bit          |        | Określa, czy data wypada w sobotę lub niedzielę |
-| national_holiday | bit          |        | Określa, czy data jest świętem narodowym        |
-| holiday_name     | nvarchar(50) |        | Nazwa święta narodowego                         |
+| day_off      | tinyint      |        | Dzień tygodnia                                  |
+| comment     | nvarchar(50) |        | Komentarz dot. przyczyny święta                         |
 
 #### Kod DDL
 
@@ -448,10 +446,8 @@ CREATE TABLE Company_Customers (
 CREATE TABLE dbo.Calendar
 (
     calendar_date DATE PRIMARY KEY,
-    day_of_week TINYINT  NOT NULL,
-    weekend BIT NOT NULL,
-    national_holiday BIT  NOT NULL,
-    holiday_name  NVARCHAR(50) NULL
+    day_off BIT  NOT NULL,
+    comment  NVARCHAR(50) NULL
 );
 ```
 
@@ -532,19 +528,15 @@ ALTER TABLE Production ADD CONSTRAINT Production_AssemblyLines
 ALTER TABLE Production ADD CONSTRAINT Production_Product
     FOREIGN KEY (product_id)
     REFERENCES Products (product_id);
+
+-- Reference: Order_Status_History_Orders (table: Order_Status_History)
+ALTER TABLE Order_Status_History ADD CONSTRAINT Order_Status_History_Orders
+    FOREIGN KEY (order_id)
+    REFERENCES Orders (order_id);
 ```
 
 # 3. Widoki, procedury/funkcje, triggery
 
-## Widoki
-
-(dla każdego widoku należy wkleić kod polecenia definiującego widok wraz z komentarzem)
-
-```sql
-crete or alter view vw_abc
-as
-select a from tab1
-```
 
 ## Procedury/funkcje
 
@@ -1060,7 +1052,3 @@ BEGIN
     JOIN inserted i ON pp.product_id = i.product_id;
 END;
 ```
-
-# 4. Inne
-
-(informacja o sposobie wygenerowania danych, uprawnienia …)
