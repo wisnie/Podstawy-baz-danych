@@ -56,8 +56,8 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | -------------------- | ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | product_id           | int           | główny | Identyfikator produktu                                                                                                                                       |
 | product_name         | nvarchar(100) |        | Nazwa produktu                                                                                                                                               |
-| unit_price           | money         |        | Koszt wyprodukowania jednej sztuki (włącznie z częściami)                                                                                                    |
-| manufactoring_cost   | money         |        | Koszt wyprodukowania jednej sztuki (robocizna)                                                                                                               |
+| unit_price           | money         |        | Aktualna cena jednostkowa produktu                                                                                                    |
+| manufactoring_cost   | money         |        | Koszt wyprodukowania jednej sztuki (koszt części + robocizna)                                                                                                               |
 | category_id          | int           | obcy   | Identyfikator kategorii                                                                                                                                      |
 | production_time_unit | int           |        | Jednostka określająca całkowitą liczbę jednostek czasu, w której produkowany jest dany produkt. 10 jednostek to jedna roboczogodzina na taśmie produkcyjnej. |
 | quantity_in_stock    | int           |        | Liczba sztuk na magazynie                                                                                                                                    |
@@ -548,6 +548,14 @@ CREATE VIEW Parts_Price AS
         INNER JOIN Parts pa ON pa.part_id = pp.part_id
         GROUP BY pp.product_id, p.product_name
         ORDER BY craft_price DESC
+```
+
+2. **Product_Profts** - pokazuje zysk dla jednego produktu (bezwzględnie i procentowo)
+
+```sql
+CREATE VIEW Product_Profits AS
+    SELECT product_id, product_name, unit_price, manufacturing_cost, (unit_price-manufacturing_cost) AS profit, (manufacturing_cost/unit_price*100) AS percent_profit FROM Products
+    ORDER BY percent_profit DESC
 ```
 
 
