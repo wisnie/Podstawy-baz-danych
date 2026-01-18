@@ -537,6 +537,19 @@ ALTER TABLE Order_Status_History ADD CONSTRAINT Order_Status_History_Orders
 
 # 3. Widoki, procedury/funkcje, triggery
 
+## Widoki
+
+1. **PartsPrice** - pokazuje cenę części dla produktów, od najdroższego do najtańszego
+
+```sql
+CREATE VIEW Parts_Price AS
+    SELECT pp.product_id, p.product_name, SUM(pp.quantity * pa.part_cost) AS craft_price FROM Products p
+        INNER JOIN Product_Parts pp ON p.product_id = pp.product_id
+        INNER JOIN Parts pa ON pa.part_id = pp.part_id
+        GROUP BY pp.product_id, p.product_name
+        ORDER BY craft_price DESC
+```
+
 
 ## Procedury/funkcje
 
@@ -1005,8 +1018,63 @@ BEGIN
         ;THROW;
     END CATCH;
 END;
+```
 
+14. **Top_Products_Number** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
 
+```sql
+CREATE PROCEDURE Top_Products_Number
+    @DateFrom DATE,
+    @DateTo DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    BEGIN TRY
+        IF NOT EXISTS(SELECT 1 FROM Orders WHERE order_date BETWEEN @DateFrom AND @DateTo)
+            BEGIN
+                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('No products between selected dates');
+                THROW 55000, @msg, 1;
+            END
+        --date from i date to w złej kolejności
+        IF @DateFrom > @DateTo
+            BEGIN
+                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Date To is earlier than Date From');
+                THROW 56000, @msg, 1;
+            END
+        SELECT 
+            p.product_id,
+            p.product_name,
+
+            SUM(od.quantity) AS total_number,
+
+            DATEPART(YEAR, o.order_date) AS year_no,
+            DATEPART(MONTH, o.order_date) AS month_no,
+            DATEPART(WEEK, o.order_date) AS week_no
+
+        FROM Products p
+        INNER JOIN Order_Details od ON od.product_id = p.product_id
+        INNER JOIN Orders o ON o.order_id = od.order_id
+
+        WHERE 
+            o.order_date BETWEEN @DateFrom AND @DateTo
+
+        GROUP BY 
+            ROLLUP (
+                p.product_id,
+                p.product_name,
+                DATEPART(YEAR, o.order_date),
+                DATEPART(MONTH, o.order_date),
+                DATEPART(WEEK, o.order_date)
+            )
+
+        ORDER BY 
+            total_number DESC;
+    END TRY
+    BEGIN CATCH
+        ;THROW;
+    END CATCH;
+END;
 ```
 
 
