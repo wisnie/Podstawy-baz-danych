@@ -1,177 +1,10 @@
-USE u_bawisnie;
-
-SET NOCOUNT ON;
-SET DATEFIRST 1; -- 1 = Poniedziałek
-
--- =============================================
--- 1. CZYSZCZENIE I TWORZENIE STRUKTURY (DDL)
--- =============================================
-
--- Usuwanie kluczy obcych (dla bezpieczeństwa przy dropowaniu)
-DECLARE @sql NVARCHAR(MAX) = N'';
-SELECT @sql += N'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id))
-    + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) +
-    ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
-FROM sys.foreign_keys;
-EXEC(@sql);
-
--- Usuwanie tabel
-IF OBJECT_ID('dbo.Production', 'U') IS NOT NULL DROP TABLE dbo.Production;
-IF OBJECT_ID('dbo.Payments', 'U') IS NOT NULL DROP TABLE dbo.Payments;
-IF OBJECT_ID('dbo.Cancelled_Orders', 'U') IS NOT NULL DROP TABLE dbo.Cancelled_Orders;
-IF OBJECT_ID('dbo.Order_Details', 'U') IS NOT NULL DROP TABLE dbo.Order_Details;
-IF OBJECT_ID('dbo.Orders', 'U') IS NOT NULL DROP TABLE dbo.Orders;
-IF OBJECT_ID('dbo.Individual_Customers', 'U') IS NOT NULL DROP TABLE dbo.Individual_Customers;
-IF OBJECT_ID('dbo.Company_Customers', 'U') IS NOT NULL DROP TABLE dbo.Company_Customers;
-IF OBJECT_ID('dbo.Customers', 'U') IS NOT NULL DROP TABLE dbo.Customers;
-IF OBJECT_ID('dbo.Product_Parts', 'U') IS NOT NULL DROP TABLE dbo.Product_Parts;
-IF OBJECT_ID('dbo.Parts', 'U') IS NOT NULL DROP TABLE dbo.Parts;
-IF OBJECT_ID('dbo.Products', 'U') IS NOT NULL DROP TABLE dbo.Products;
-IF OBJECT_ID('dbo.Categories', 'U') IS NOT NULL DROP TABLE dbo.Categories;
-IF OBJECT_ID('dbo.Assembly_Lines', 'U') IS NOT NULL DROP TABLE dbo.Assembly_Lines;
-IF OBJECT_ID('dbo.Suppliers', 'U') IS NOT NULL DROP TABLE dbo.Suppliers;
-IF OBJECT_ID('dbo.Calendar', 'U') IS NOT NULL DROP TABLE dbo.Calendar;
-
--- TWORZENIE TABEL Z NOWYMI KOLUMNAMI
-
-CREATE TABLE dbo.Calendar (
-    calendar_date DATE PRIMARY KEY,
-    day_of_week TINYINT NOT NULL,
-    weekend BIT NOT NULL,
-    national_holiday BIT NOT NULL,
-    holiday_name NVARCHAR(50) NULL
-);
-
-CREATE TABLE dbo.Suppliers (
-    supplier_id INT IDENTITY(1,1) PRIMARY KEY,
-    name NVARCHAR(100),
-    address NVARCHAR(100),
-    city NVARCHAR(50),
-    region NVARCHAR(50),
-    postal_code NVARCHAR(20),
-    country NVARCHAR(50),
-    contact_email NVARCHAR(100),
-    phone NVARCHAR(50),
-    delivery_days INT
-);
-
-CREATE TABLE dbo.Assembly_Lines (
-    assembly_line_id INT IDENTITY(1,1) PRIMARY KEY,
-    min_capability INT,
-    max_capability INT
-);
-
-CREATE TABLE dbo.Categories (
-    category_id INT IDENTITY(1,1) PRIMARY KEY,
-    category_name NVARCHAR(100),
-    assembly_line INT FOREIGN KEY REFERENCES Assembly_Lines(assembly_line_id)
-);
-
-CREATE TABLE dbo.Products (
-    product_id INT IDENTITY(1,1) PRIMARY KEY,
-    product_name NVARCHAR(100),
-    manufacturing_cost MONEY,
-    unit_price MONEY,
-    category_id INT FOREIGN KEY REFERENCES Categories(category_id),
-    production_time_unit INT,
-    quantity_in_stock INT,
-    warehouse_sector INT,
-    production_level INT,
-    discontinued BIT DEFAULT 0
-);
-
-CREATE TABLE dbo.Parts (
-    part_id INT IDENTITY(1,1) PRIMARY KEY,
-    part_name NVARCHAR(100),
-    part_cost MONEY,
-    supplier_id INT FOREIGN KEY REFERENCES Suppliers(supplier_id),
-    units_in_stock INT,
-    units_on_order INT,
-    reorder_level INT,
-    discontinued BIT DEFAULT 0 -- NOWA KOLUMNA
-);
-
-CREATE TABLE dbo.Product_Parts (
-    product_id INT FOREIGN KEY REFERENCES Products(product_id),
-    part_id INT FOREIGN KEY REFERENCES Parts(part_id),
-    quantity INT,
-    PRIMARY KEY (product_id, part_id)
-);
-
-CREATE TABLE dbo.Customers (
-    customer_id INT IDENTITY(1,1) PRIMARY KEY,
-    address NVARCHAR(100),
-    city NVARCHAR(50),
-    region NVARCHAR(50),
-    country NVARCHAR(50),
-    postal_code NVARCHAR(20),
-    contact_email NVARCHAR(100),
-    phone NVARCHAR(50)
-);
-
-CREATE TABLE dbo.Individual_Customers (
-    customer_id INT PRIMARY KEY FOREIGN KEY REFERENCES Customers(customer_id),
-    name NVARCHAR(50),
-    surname NVARCHAR(50),
-    title_of_courtesy NVARCHAR(20)
-);
-
-CREATE TABLE dbo.Company_Customers (
-    customer_id INT PRIMARY KEY FOREIGN KEY REFERENCES Customers(customer_id),
-    company_name NVARCHAR(100),
-    contact_person_name NVARCHAR(50),
-    contact_person_surname NVARCHAR(50),
-    nip_number NVARCHAR(20)
-);
-
-CREATE TABLE dbo.Orders (
-    order_id INT IDENTITY(1,1) PRIMARY KEY,
-    customer_id INT FOREIGN KEY REFERENCES Customers(customer_id),
-    order_date DATE,
-    estimated_date DATE,
-    delivery_date DATE NULL,
-    discount DECIMAL(4, 2) DEFAULT 0.00,
-    order_status NVARCHAR(50) DEFAULT 'Pending' -- NOWA KOLUMNA
-);
-
-CREATE TABLE dbo.Order_Details (
-    order_id INT FOREIGN KEY REFERENCES Orders(order_id),
-    product_id INT FOREIGN KEY REFERENCES Products(product_id),
-    quantity INT,
-    unit_price MONEY,
-    extra_remarks NVARCHAR(200) NULL,
-    PRIMARY KEY (order_id, product_id)
-);
-
-CREATE TABLE dbo.Cancelled_Orders (
-    order_id INT PRIMARY KEY FOREIGN KEY REFERENCES Orders(order_id),
-    cancellation_date DATETIME,
-    reason NVARCHAR(200),
-    compensation MONEY
-);
-
-CREATE TABLE dbo.Payments (
-    payment_id INT IDENTITY(1,1) PRIMARY KEY,
-    order_id INT FOREIGN KEY REFERENCES Orders(order_id),
-    paid_amount MONEY,
-    payment_type NVARCHAR(20),
-    payment_date DATE
-);
-
-CREATE TABLE dbo.Production (
-    production_id INT IDENTITY(1,1) PRIMARY KEY,
-    product_id INT FOREIGN KEY REFERENCES Products(product_id),
-    assembly_line INT FOREIGN KEY REFERENCES Assembly_Lines(assembly_line_id),
-    manufacturing_cost MONEY,
-    quantity INT,
-    production_startdate DATETIME,
-    production_enddate DATETIME NULL,
-    order_id INT NULL FOREIGN KEY REFERENCES Orders(order_id)
-);
-
 -- =============================================
 -- 2. GENEROWANIE KALENDARZA
 -- =============================================
+
+-- Ensure Monday is day 1, so Saturday=6 and Sunday=7
+SET DATEFIRST 1;
+
 DECLARE @StartDate DATE = '2025-01-01';
 DECLARE @EndDate   DATE = '2045-12-31';
 
@@ -182,25 +15,32 @@ WITH Dates AS (
     FROM Dates
     WHERE DateVal < @EndDate
 )
-INSERT INTO dbo.Calendar (calendar_date, day_of_week, weekend, national_holiday, holiday_name)
+INSERT INTO dbo.Calendar (calendar_date, day_off, comment)
 SELECT
     DateVal,
-    DATEPART(WEEKDAY, DateVal),
-    CASE WHEN DATEPART(WEEKDAY, DateVal) IN (6, 7) THEN 1 ELSE 0 END,
-    0, NULL
+    -- Set day_off to 1 if it is Saturday (6) or Sunday (7)
+    CASE
+        WHEN DATEPART(WEEKDAY, DateVal) IN (6, 7) THEN 1
+        ELSE 0
+    END AS day_off,
+    -- Add the day name to comment if it is a weekend, otherwise NULL
+    CASE
+        WHEN DATEPART(WEEKDAY, DateVal) IN (6, 7) THEN DATENAME(WEEKDAY, DateVal)
+        ELSE NULL
+    END AS comment
 FROM Dates
 OPTION (MAXRECURSION 0);
 
 -- Aktualizacja świąt (skrócona wersja logiczna z Twojego skryptu)
-UPDATE dbo.Calendar SET national_holiday = 1, holiday_name = 'Nowy Rok' WHERE MONTH(calendar_date)=1 AND DAY(calendar_date)=1;
-UPDATE dbo.Calendar SET national_holiday = 1, holiday_name = 'Trzech Króli' WHERE MONTH(calendar_date)=1 AND DAY(calendar_date)=6;
-UPDATE dbo.Calendar SET national_holiday = 1, holiday_name = 'Święto Pracy' WHERE MONTH(calendar_date)=5 AND DAY(calendar_date)=1;
-UPDATE dbo.Calendar SET national_holiday = 1, holiday_name = 'Konstytucji 3 Maja' WHERE MONTH(calendar_date)=5 AND DAY(calendar_date)=3;
-UPDATE dbo.Calendar SET national_holiday = 1, holiday_name = 'Wniebowzięcie NMP' WHERE MONTH(calendar_date)=8 AND DAY(calendar_date)=15;
-UPDATE dbo.Calendar SET national_holiday = 1, holiday_name = 'Wszystkich Świętych' WHERE MONTH(calendar_date)=11 AND DAY(calendar_date)=1;
-UPDATE dbo.Calendar SET national_holiday = 1, holiday_name = 'Niepodległości' WHERE MONTH(calendar_date)=11 AND DAY(calendar_date)=11;
-UPDATE dbo.Calendar SET national_holiday = 1, holiday_name = 'Wigilia' WHERE MONTH(calendar_date)=12 AND DAY(calendar_date)=24;
-UPDATE dbo.Calendar SET national_holiday = 1, holiday_name = 'Boże Narodzenie' WHERE MONTH(calendar_date)=12 AND DAY(calendar_date) IN (25,26);
+UPDATE dbo.Calendar SET day_off = 1, comment = 'Nowy Rok' WHERE MONTH(calendar_date)=1 AND DAY(calendar_date)=1;
+UPDATE dbo.Calendar SET day_off = 1, comment = 'Trzech Króli' WHERE MONTH(calendar_date)=1 AND DAY(calendar_date)=6;
+UPDATE dbo.Calendar SET day_off = 1, comment = 'Święto Pracy' WHERE MONTH(calendar_date)=5 AND DAY(calendar_date)=1;
+UPDATE dbo.Calendar SET day_off = 1, comment = 'Konstytucji 3 Maja' WHERE MONTH(calendar_date)=5 AND DAY(calendar_date)=3;
+UPDATE dbo.Calendar SET day_off = 1, comment = 'Wniebowzięcie Najświętszej Maryi Panny' WHERE MONTH(calendar_date)=8 AND DAY(calendar_date)=15;
+UPDATE dbo.Calendar SET day_off = 1, comment = 'Wszystkich Świętych' WHERE MONTH(calendar_date)=11 AND DAY(calendar_date)=1;
+UPDATE dbo.Calendar SET day_off = 1, comment = 'Święto Niepodległości 11 listopada' WHERE MONTH(calendar_date)=11 AND DAY(calendar_date)=11;
+UPDATE dbo.Calendar SET day_off = 1, comment = 'Wigilia Bożego Narodzenia' WHERE MONTH(calendar_date)=12 AND DAY(calendar_date)=24;
+UPDATE dbo.Calendar SET day_off = 1, comment = 'Boże Narodzenie' WHERE MONTH(calendar_date)=12 AND DAY(calendar_date) IN (25,26);
 
 -- Święta ruchome (Wielkanoc - uproszczone wywołanie pętli z oryginalnego skryptu)
 -- [Tutaj wklej pętlę Gaussa jeśli potrzebujesz pełnej dokładności, dla czytelności skrócono]
