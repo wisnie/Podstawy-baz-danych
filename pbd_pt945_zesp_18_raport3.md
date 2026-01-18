@@ -823,31 +823,49 @@ BEGIN
 END
 ```
 
-10. **AddNewCompanyCustomer** - dodaje nową firmę będącą klientem do bazy danych.
+10. **AddCompanyCustomer** - dodaje nową firmę będącą klientem do bazy danych.
 
 ```sql
-CREATE PROCEDURE AddNewCompanyCustomer(@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50), @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100), @phone nvarchar(15), @company_name NVARCHAR(100), @contact_person_name NVARCHAR(100), @contact_person_surname NVARCHAR(100), @nip_number NVARCHAR(10))
+CREATE PROCEDURE AddCompanyCustomer
+    @address NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50),
+    @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100),
+    @phone NVARCHAR(15), @company_name NVARCHAR(100),
+    @contact_person_name NVARCHAR(100), @contact_person_surname NVARCHAR(100),
+    @nip_number NVARCHAR(10)
 AS
 BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
     BEGIN TRY
-        IF EXISTS(
-            SELECT *
-            FROM Company_Customers
-            WHERE company_name = @company_name
-            )
-            BEGIN
-                THROW 52000, N'Client already exists', 1;
-            END
-        INSERT INTO Customers(address, city, region, country, postal_code, contact_email, phone)
-        VALUES(@adress, @city, @region, @country, @postal_code, @contact_email, @phone)
-        INSERT INTO Company_Customers(company_name, contact_person_name, contact_person_surname, nip_number)
-        VALUES (@company_name, @contact_person_name, @contact_person_surname, @nip_number)
+        IF EXISTS(SELECT 1 FROM Company_Customers WHERE company_name = @company_name)
+        BEGIN
+            DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Company with name "%s" already exists.', @company_name);
+            THROW 51000, @msg, 1;
+        END
+
+        BEGIN TRANSACTION;
+
+            INSERT INTO Customers (address, city, region, country, postal_code, contact_email, phone)
+            VALUES (@address, @city, @region, @country, @postal_code, @contact_email, @phone);
+
+            DECLARE @customer_id INT = SCOPE_IDENTITY();
+
+            INSERT INTO Company_Customers (customer_id, company_name, contact_person_name, contact_person_surname, nip_number)
+            VALUES (@customer_id, @company_name, @contact_person_name, @contact_person_surname, @nip_number);
+
+        COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        DECLARE @msg NVARCHAR(2048) = N'ERROR: ' + ERROR_MESSAGE();
-        THROW 52000, @msg, 1;
+        IF XACT_STATE() <> 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END
+
+        ;THROW;
     END CATCH
 END
+GO
 ```
 
 11. **Last_Orders_From_Client** - generuje poprzednie zamówienia danego klienta, wraz ze zniżkami i wartością zamówienia przed/po zamówieniu
@@ -930,45 +948,64 @@ BEGIN
 END;
 ```
 
-13. **Top_Products** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
+13. **Top_Products_Value** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
 
 ```sql
-CREATE PROCEDURE Top_Products
+CREATE PROCEDURE Top_Products_Value
     @DateFrom DATE,
     @DateTo DATE
 AS
 BEGIN
-    SELECT 
-        p.product_id,
-        p.product_name,
-
-        SUM(od.unit_price * od.quantity) AS total_before_discount,
-        SUM(od.unit_price * od.quantity * od.discount) AS total_discount,
-        SUM(od.unit_price * od.quantity * (1 - od.discount)) AS total_after_discount,
-
-        DATEPART(YEAR, o.order_date) AS year_no,
-        DATEPART(MONTH, o.order_date) AS month_no,
-        DATEPART(WEEK, o.order_date) AS week_no
-
-    FROM Products p
-    INNER JOIN Order_Details od ON od.product_id = p.product_id
-    INNER JOIN Orders o ON o.order_id = od.order_id
-
-    WHERE 
-        o.order_date BETWEEN @DateFrom AND @DateTo
-
-    GROUP BY 
-        ROLLUP (
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    BEGIN TRY
+        IF NOT EXISTS(SELECT 1 FROM Orders WHERE order_date BETWEEN @DateFrom AND @DateTo)
+            BEGIN
+                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('No products between selected dates');
+                THROW 55000, @msg, 1;
+            END
+        --date from i date to w złej kolejności
+        IF @DateFrom > @DateTo
+            BEGIN
+                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Date To is earlier than Date From');
+                THROW 56000, @msg, 1;
+            END
+        SELECT 
             p.product_id,
             p.product_name,
-            DATEPART(YEAR, o.order_date),
-            DATEPART(MONTH, o.order_date),
-            DATEPART(WEEK, o.order_date)
-        )
 
-    ORDER BY 
-        total_after_discount DESC;
+            SUM(od.unit_price * od.quantity) AS total_before_discount,
+            SUM(od.unit_price * od.quantity * od.discount) AS total_discount,
+            SUM(od.unit_price * od.quantity * (1 - od.discount)) AS total_after_discount,
+
+            DATEPART(YEAR, o.order_date) AS year_no,
+            DATEPART(MONTH, o.order_date) AS month_no,
+            DATEPART(WEEK, o.order_date) AS week_no
+
+        FROM Products p
+        INNER JOIN Order_Details od ON od.product_id = p.product_id
+        INNER JOIN Orders o ON o.order_id = od.order_id
+
+        WHERE 
+            o.order_date BETWEEN @DateFrom AND @DateTo
+
+        GROUP BY 
+            ROLLUP (
+                p.product_id,
+                p.product_name,
+                DATEPART(YEAR, o.order_date),
+                DATEPART(MONTH, o.order_date),
+                DATEPART(WEEK, o.order_date)
+            )
+
+        ORDER BY 
+            total_after_discount DESC;
+    END TRY
+    BEGIN CATCH
+        ;THROW;
+    END CATCH;
 END;
+
 
 ```
 
