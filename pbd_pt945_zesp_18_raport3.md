@@ -46,7 +46,7 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 
 ## Schemat bazy danych
 
-![Schemat bazy danych](schemat_bazy_4.svg)
+![Schemat bazy danych](schemat_bazy_5.svg)
 
 ## Opisy poszczególnych tabel (wraz z kodem DDL)
 
