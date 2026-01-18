@@ -547,7 +547,6 @@ CREATE VIEW Parts_Price AS
         INNER JOIN Product_Parts pp ON p.product_id = pp.product_id
         INNER JOIN Parts pa ON pa.part_id = pp.part_id
         GROUP BY pp.product_id, p.product_name
-        ORDER BY craft_price DESC
 ```
 
 2. **Product_Profts** - pokazuje zysk dla jednego produktu (bezwzględnie i procentowo)
@@ -973,14 +972,14 @@ END;
 
 ```sql
 CREATE PROCEDURE Top_Products_Value
-    @DateFrom DATE,
-    @DateTo DATE
+    @date_from DATE,
+    @date_to DATE
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
     BEGIN TRY
-        IF NOT EXISTS(SELECT 1 FROM Orders WHERE order_date BETWEEN @DateFrom AND @DateTo)
+        IF NOT EXISTS(SELECT 1 FROM Orders WHERE order_date BETWEEN @date_from AND @date_to)
             BEGIN
                 DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('No products between selected dates');
                 THROW 55000, @msg, 1;
