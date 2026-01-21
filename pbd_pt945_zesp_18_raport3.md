@@ -814,7 +814,7 @@ GO
 8. **AddNewProduct** - dodaje nowy produkt do bazy danych.
 
 ```sql
-CREATE PROCEDURE AddNewProduct
+CREATE PROCEDURE AddProduct
     (@product_name NVARCHAR(100), @unit_price MONEY, @manufactoring_cost MONEY,
      @category_id INT, @production_time_unit INT, @quantity_in_stock INT,
      @warehouse_sector INT, @production_level INT, @discontinued BIT)
