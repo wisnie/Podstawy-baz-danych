@@ -56,8 +56,8 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | -------------------- | ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | product_id           | int           | główny | Identyfikator produktu                                                                                                                                       |
 | product_name         | nvarchar(100) |        | Nazwa produktu                                                                                                                                               |
-| unit_price           | money         |        | Koszt wyprodukowania jednej sztuki (włącznie z częściami)                                                                                                    |
-| manufactoring_cost   | money         |        | Koszt wyprodukowania jednej sztuki (robocizna)                                                                                                               |
+| unit_price           | money         |        | Aktualna cena jednostkowa produktu                                                                                                    |
+| manufactoring_cost   | money         |        | Koszt wyprodukowania jednej sztuki (koszt części + robocizna)                                                                                                               |
 | category_id          | int           | obcy   | Identyfikator kategorii                                                                                                                                      |
 | production_time_unit | int           |        | Jednostka określająca całkowitą liczbę jednostek czasu, w której produkowany jest dany produkt. 10 jednostek to jedna roboczogodzina na taśmie produkcyjnej. |
 | quantity_in_stock    | int           |        | Liczba sztuk na magazynie                                                                                                                                    |
@@ -538,6 +538,24 @@ ALTER TABLE Order_Status_History ADD CONSTRAINT Order_Status_History_Orders
 
 ## Widoki
 
+1. **PartsPrice** - pokazuje cenę części dla produktów, od najdroższego do najtańszego
+
+```sql
+CREATE VIEW Parts_Price AS
+    SELECT pp.product_id, p.product_name, SUM(pp.quantity * pa.part_cost) AS craft_price FROM Products p
+        INNER JOIN Product_Parts pp ON p.product_id = pp.product_id
+        INNER JOIN Parts pa ON pa.part_id = pp.part_id
+        GROUP BY pp.product_id, p.product_name
+```
+
+2. **Product_Profts** - pokazuje zysk dla jednego produktu (bezwzględnie i procentowo)
+
+```sql
+CREATE VIEW Product_Profits AS
+    SELECT product_id, product_name, unit_price, manufacturing_cost, (unit_price-manufacturing_cost) AS profit, (manufacturing_cost/unit_price*100) AS percent_profit FROM Products
+    ORDER BY percent_profit DESC
+```
+
 1. **Individual_Client_Orders** - dla każdego klienta indywidualnego pokazuje jego łączną liczbę złożonych zamówień, liczbę zamówień w trakcie realizacji, łączną sumę wydanych pieniędzy w sklepie (po zniżkach), łączną sumę otrzymanych rabatów, liczbę odwołanych zamówień oraz bilans konta, czyli różnicę między przelanymi pieniędzmi na konto naszej firmy, a sumą wartości wszystkich złożonych zamówień (bilans jest ujemny dla klientów z długiem dla firmy).
 
 ```sql
@@ -883,7 +901,7 @@ BEGIN
 END
 ```
 
-10. **AddNewCompanyCustomer** - dodaje nową firmę będącą klientem do bazy danych.
+10. **AddCompanyCustomer** - dodaje nową firmę będącą klientem do bazy danych.
 
 ```sql
 CREATE PROCEDURE AddCompanyCustomer
@@ -898,6 +916,7 @@ BEGIN
     SET XACT_ABORT ON;
 
     BEGIN TRY
+        IF EXISTS(SELECT 1 FROM Company_Customers WHERE company_name = @company_name)
         IF EXISTS(SELECT * FROM Company_Customers WHERE company_name = @company_name)
         BEGIN
             DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Company with name "%s" already exists.', @company_name);
@@ -925,6 +944,7 @@ BEGIN
         ;THROW;
     END CATCH
 END
+GO
 ```
 
 11. **Last_Orders_From_Client** - generuje poprzednie zamówienia danego klienta, wraz ze zniżkami i wartością zamówienia przed/po zamówieniu
@@ -1007,30 +1027,91 @@ BEGIN
 END;
 ```
 
-13. **Top_Products** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
+13. **Top_Products_Value** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
 
 ```sql
-CREATE PROCEDURE Top_Products
-    @DateFrom DATE,
-    @DateTo DATE
+CREATE PROCEDURE Top_Products_Value
+    @date_from DATE,
+    @date_to DATE
 AS
 BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    BEGIN TRY
+        IF NOT EXISTS(SELECT 1 FROM Orders WHERE order_date BETWEEN @date_from AND @date_to)
+            BEGIN
+                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('No products between selected dates');
+                THROW 55000, @msg, 1;
+            END
+        --date from i date to w złej kolejności
+        IF @DateFrom > @DateTo
+            BEGIN
+                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Date To is earlier than Date From');
+                THROW 56000, @msg, 1;
+            END
+        SELECT 
+            p.product_id,
+            p.product_name,
     SELECT
         p.product_id,
         p.product_name,
 
-        SUM(od.unit_price * od.quantity) AS total_before_discount,
-        SUM(od.unit_price * od.quantity * od.discount) AS total_discount,
-        SUM(od.unit_price * od.quantity * (1 - od.discount)) AS total_after_discount,
+            SUM(od.unit_price * od.quantity) AS total_before_discount,
+            SUM(od.unit_price * od.quantity * od.discount) AS total_discount,
+            SUM(od.unit_price * od.quantity * (1 - od.discount)) AS total_after_discount,
 
-        DATEPART(YEAR, o.order_date) AS year_no,
-        DATEPART(MONTH, o.order_date) AS month_no,
-        DATEPART(WEEK, o.order_date) AS week_no
+            DATEPART(YEAR, o.order_date) AS year_no,
+            DATEPART(MONTH, o.order_date) AS month_no,
+            DATEPART(WEEK, o.order_date) AS week_no
 
-    FROM Products p
-    INNER JOIN Order_Details od ON od.product_id = p.product_id
-    INNER JOIN Orders o ON o.order_id = od.order_id
+        FROM Products p
+        INNER JOIN Order_Details od ON od.product_id = p.product_id
+        INNER JOIN Orders o ON o.order_id = od.order_id
 
+        WHERE 
+            o.order_date BETWEEN @DateFrom AND @DateTo
+
+        GROUP BY 
+            ROLLUP (
+                p.product_id,
+                p.product_name,
+                DATEPART(YEAR, o.order_date),
+                DATEPART(MONTH, o.order_date),
+                DATEPART(WEEK, o.order_date)
+            )
+
+        ORDER BY 
+            total_after_discount DESC;
+    END TRY
+    BEGIN CATCH
+        ;THROW;
+    END CATCH;
+END;
+```
+
+14. **Top_Products_Number** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
+
+```sql
+CREATE PROCEDURE Top_Products_Number
+    @DateFrom DATE,
+    @DateTo DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    BEGIN TRY
+        IF NOT EXISTS(SELECT 1 FROM Orders WHERE order_date BETWEEN @DateFrom AND @DateTo)
+            BEGIN
+                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('No products between selected dates');
+                THROW 55000, @msg, 1;
+            END
+        --date from i date to w złej kolejności
+        IF @DateFrom > @DateTo
+            BEGIN
+                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Date To is earlier than Date From');
+                THROW 56000, @msg, 1;
+            END
+        SELECT 
     WHERE
         o.order_date BETWEEN @DateFrom AND @DateTo
 
@@ -1038,16 +1119,120 @@ BEGIN
         ROLLUP (
             p.product_id,
             p.product_name,
-            DATEPART(YEAR, o.order_date),
-            DATEPART(MONTH, o.order_date),
-            DATEPART(WEEK, o.order_date)
-        )
 
+            SUM(od.quantity) AS total_number,
+
+            DATEPART(YEAR, o.order_date) AS year_no,
+            DATEPART(MONTH, o.order_date) AS month_no,
+            DATEPART(WEEK, o.order_date) AS week_no
+
+        FROM Products p
+        INNER JOIN Order_Details od ON od.product_id = p.product_id
+        INNER JOIN Orders o ON o.order_id = od.order_id
+
+        WHERE 
+            o.order_date BETWEEN @DateFrom AND @DateTo
+
+        GROUP BY 
+            ROLLUP (
+                p.product_id,
+                p.product_name,
+                DATEPART(YEAR, o.order_date),
+                DATEPART(MONTH, o.order_date),
+                DATEPART(WEEK, o.order_date)
+            )
+
+        ORDER BY 
+            total_number DESC;
+    END TRY
+    BEGIN CATCH
+        ;THROW;
+    END CATCH;
     ORDER BY
         total_after_discount DESC;
 END;
-
 ```
+
+15.  **TopProductsWeek** - generuje listę najlepiej sprzedawanych produktów w tygodniu
+
+```sql
+        CREATE PROCEDURE TopProductsWeek
+        @week_number INT,
+        @year INT
+    AS
+    BEGIN
+        BEGIN TRY
+            SET NOCOUNT ON;
+                IF @week_number > 53
+                    BEGIN
+                        DECLARE @msg1 NVARCHAR(2048) = FORMATMESSAGE('Week number does not exist');
+                        THROW 56000, @msg1, 1;
+                    END
+            SELECT p.product_id, p.product_name, SUM(od.unit_price * od.quantity) AS val FROM Products p
+            INNER JOIN Order_Details od ON od.product_id = p.product_id
+            INNER JOIN Orders o ON o.order_id = od.order_id
+            WHERE DATEPART(ISO_WEEK, o.order_date) = @week_number
+            AND YEAR(o.order_date) = @year
+            GROUP BY p.product_id, p.product_name
+            ORDER BY val DESC
+        END TRY
+        BEGIN CATCH
+            ;THROW;
+        END CATCH;
+    END;
+```
+
+16.  **TopProductsMonth** - generuje listę najlepiej sprzedawanych produktów w miesiącu
+
+```sql
+    CREATE PROCEDURE TopProductsMonth
+        @month_number INT,
+        @year INT
+    AS
+    BEGIN
+        BEGIN TRY
+            SET NOCOUNT ON;
+                IF @month_number > 12
+                    BEGIN
+                        DECLARE @msg1 NVARCHAR(2048) = FORMATMESSAGE('Month number does not exist');
+                        THROW 56000, @msg1, 1;
+                    END
+            SELECT p.product_id, p.product_name, SUM(od.unit_price * od.quantity) AS val FROM Products p
+            INNER JOIN Order_Details od ON od.product_id = p.product_id
+            INNER JOIN Orders o ON o.order_id = od.order_id
+            WHERE MONTH(o.order_date) = @month_number
+            AND YEAR(o.order_date) = @year
+            GROUP BY p.product_id, p.product_name
+            ORDER BY val DESC
+        END TRY
+        BEGIN CATCH
+            ;THROW;
+        END CATCH;
+    END;
+```
+
+17.  **TopProductsYear** - generuje listę najlepiej sprzedawanych produktów w roku
+
+```sql
+    CREATE PROCEDURE TopProductsYear
+    @year INT
+    AS
+    BEGIN
+        BEGIN TRY
+            SET NOCOUNT ON;
+            SELECT p.product_id, p.product_name, SUM(od.unit_price * od.quantity) AS val FROM Products p
+            INNER JOIN Order_Details od ON od.product_id = p.product_id
+            INNER JOIN Orders o ON o.order_id = od.order_id
+            WHERE YEAR(o.order_date) = @year
+            GROUP BY p.product_id, p.product_name
+            ORDER BY val DESC
+        END TRY
+        BEGIN CATCH
+            ;THROW;
+        END CATCH;
+    END;
+```
+
 
 ## Triggery
 
