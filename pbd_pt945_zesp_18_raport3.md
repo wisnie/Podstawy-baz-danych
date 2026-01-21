@@ -1181,8 +1181,11 @@ BEGIN
 
         BEGIN TRANSACTION;
 
-        DECLARE @days_to_finish_order INT;
+        -- Jeśli produkt mógł być wydany bezpośrednio z magazynu, to
+        -- zostanie wydany następnego dnia roboczego.
+        DECLARE @days_to_finish_order INT = 1;
         DECLARE @estimated_date DATETIME;
+
         WITH line_occupancy AS (
             SELECT Assembly_Lines.assembly_line,
                    max_capability,
@@ -1227,6 +1230,8 @@ BEGIN
     END CATCH
 END
 GO
+
+
 ```
 
 19. **ViewOrderItems** - dla każdego zamówienia pokazuje informacje o zamówionych produktach.
