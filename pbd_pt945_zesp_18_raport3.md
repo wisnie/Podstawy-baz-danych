@@ -56,8 +56,8 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 | -------------------- | ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | product_id           | int           | główny | Identyfikator produktu                                                                                                                                       |
 | product_name         | nvarchar(100) |        | Nazwa produktu                                                                                                                                               |
-| unit_price           | money         |        | Aktualna cena jednostkowa produktu                                                                                                    |
-| manufactoring_cost   | money         |        | Koszt wyprodukowania jednej sztuki (koszt części + robocizna)                                                                                                               |
+| unit_price           | money         |        | Aktualna cena jednostkowa produktu                                                                                                                           |
+| manufactoring_cost   | money         |        | Koszt wyprodukowania jednej sztuki (koszt części + robocizna)                                                                                                |
 | category_id          | int           | obcy   | Identyfikator kategorii                                                                                                                                      |
 | production_time_unit | int           |        | Jednostka określająca całkowitą liczbę jednostek czasu, w której produkowany jest dany produkt. 10 jednostek to jedna roboczogodzina na taśmie produkcyjnej. |
 | quantity_in_stock    | int           |        | Liczba sztuk na magazynie                                                                                                                                    |
@@ -69,17 +69,17 @@ Klient biznesowy specjalizuje się w produkcji mebli biurowych, w szczególnośc
 
 ```sql
 -- Table: Products
-CREATE TABLE Products (
-    product_id int  NOT NULL IDENTITY,
-    product_name nvarchar(100)  NOT NULL,
-    manufacturing_cost money  NOT NULL CHECK (manufacturing_cost >= 0),
-    unit_price money NOT NULL CHECK (unit_price >= 0),
-    category_id int  NOT NULL,
-    production_time_unit int  NOT NULL CHECK (production_time_unit >= 0),
-    quantity_on_stock int  NOT NULL CHECK (quantity_on_stock >= 0),
-    warehouse_sector int  NOT NULL CHECK (warehouse_sector >=0),
-    production_level int  NOT NULL CHECK (production_level >= 0),
-    CONSTRAINT Products_pk PRIMARY KEY  (product_id)
+CREATE TABLE dbo.Products (
+    product_id INT IDENTITY(1,1) PRIMARY KEY,
+    product_name NVARCHAR(100),
+    manufacturing_cost MONEY,
+    unit_price MONEY,
+    category_id INT FOREIGN KEY REFERENCES Categories(category_id),
+    production_time_unit INT,
+    quantity_in_stock INT,
+    warehouse_sector INT,
+    production_level INT,
+    discontinued BIT DEFAULT 0
 );
 ```
 
@@ -95,11 +95,11 @@ CREATE TABLE Products (
 
 ```sql
 -- Table: Product_Parts
-CREATE TABLE Product_Parts (
-    product_id int  NOT NULL,
-    part_id int  NOT NULL,
-    quantity int  NOT NULL CHECK (quantity >= 0),
-    CONSTRAINT Product_Parts_pk PRIMARY KEY  (part_id,product_id)
+CREATE TABLE dbo.Product_Parts (
+    product_id INT FOREIGN KEY REFERENCES Products(product_id),
+    part_id INT FOREIGN KEY REFERENCES Parts(part_id),
+    quantity INT,
+    PRIMARY KEY (product_id, part_id)
 );
 ```
 
@@ -120,15 +120,15 @@ CREATE TABLE Product_Parts (
 
 ```sql
 -- Table: Parts
-CREATE TABLE Parts (
-    part_id int  NOT NULL IDENTITY,
-    part_name nvarchar(100)  NOT NULL,
-    part_cost money  NOT NULL CHECK (part_cost >= 0),
-    supplier_id int  NOT NULL,
-    units_in_stock int  NOT NULL CHECK (units_in_stock >= 0),
-    units_on_order int  NOT NULL CHECK (units_on_order >= 0),
-    reorder_level int  NOT NULL CHECK (reorder_level >= 0),
-    CONSTRAINT Parts_pk PRIMARY KEY  (part_id)
+CREATE TABLE dbo.Parts (
+    part_id INT IDENTITY(1,1) PRIMARY KEY,
+    part_name NVARCHAR(100),
+    part_cost MONEY,
+    supplier_id INT FOREIGN KEY REFERENCES Suppliers(supplier_id),
+    units_in_stock INT,
+    units_on_order INT,
+    reorder_level INT,
+    discontinued BIT DEFAULT 0
 );
 ```
 
@@ -151,18 +151,17 @@ CREATE TABLE Parts (
 
 ```sql
 -- Table: Suppliers
-CREATE TABLE Suppliers (
-    supplier_id int  NOT NULL IDENTITY,
-    name nvarchar(50)  NOT NULL,
-    address nvarchar(100)  NOT NULL,
-    city nvarchar(30)  NOT NULL,
-    region nvarchar(50)  NOT NULL,
-    postal_code nvarchar(10)  NOT NULL,
-    country nvarchar(30)  NOT NULL,
-    contact_email nvarchar(100)  NOT NULL CHECK (contact_email LIKE '%_@__%.__%'),
-    phone nvarchar(15)  NOT NULL,
-    delivery_days int  NOT NULL CHECK (delivery_days >= 0),
-    CONSTRAINT Suppliers_pk PRIMARY KEY  (supplier_id)
+CREATE TABLE dbo.Suppliers (
+    supplier_id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100),
+    address NVARCHAR(100),
+    city NVARCHAR(50),
+    region NVARCHAR(50),
+    postal_code NVARCHAR(20),
+    country NVARCHAR(50),
+    contact_email NVARCHAR(100),
+    phone NVARCHAR(50),
+    delivery_days INT
 );
 ```
 
@@ -178,11 +177,10 @@ CREATE TABLE Suppliers (
 
 ```sql
 -- Table: Categories
-CREATE TABLE Categories (
-    category_id int  NOT NULL IDENTITY,
-    category_name nvarchar(50)  NOT NULL,
-    assembly_line int  NOT NULL,
-    CONSTRAINT Categories_pk PRIMARY KEY  (category_id)
+CREATE TABLE dbo.Categories (
+    category_id INT IDENTITY(1,1) PRIMARY KEY,
+    category_name NVARCHAR(100),
+    assembly_line INT FOREIGN KEY REFERENCES Assembly_Lines(assembly_line_id)
 );
 ```
 
@@ -198,11 +196,10 @@ CREATE TABLE Categories (
 
 ```sql
 -- Table: Assembly_Lines
-CREATE TABLE Assembly_Lines (
-    assembly_line int  NOT NULL IDENTITY CHECK (assembly_line >= 0),
-    min_capability int  NOT NULL,
-    max_capability int  NOT NULL,
-    CONSTRAINT Assembly_Lines_pk PRIMARY KEY  (assembly_line)
+CREATE TABLE dbo.Assembly_Lines (
+    assembly_line_id INT IDENTITY(1,1) PRIMARY KEY,
+    min_capability INT,
+    max_capability INT
 );
 ```
 
@@ -222,18 +219,17 @@ CREATE TABLE Assembly_Lines (
 
 ```sql
 -- Table: Production
-CREATE TABLE Production (
-    production_id int  NOT NULL IDENTITY,
-    product_id int  NOT NULL,
-    assembly_line int  NOT NULL,
-    manufacturing_cost money  NOT NULL CHECK (manufacturing_cost >= 0),
-    quantity int  NOT NULL CHECK (quantity >= 0),
-    production_startdate datetime  NULL,
-    production_enddate datetime  NULL,
-    order_id int  NULL,
-    CONSTRAINT production_startdate_bef_enddate CHECK (production_startdate <= production_enddate),
-    CONSTRAINT Production_pk PRIMARY KEY  (production_id)
+CREATE TABLE dbo.Production (
+    production_id INT IDENTITY(1,1) PRIMARY KEY,
+    product_id INT FOREIGN KEY REFERENCES Products(product_id),
+    assembly_line INT FOREIGN KEY REFERENCES Assembly_Lines(assembly_line_id),
+    manufacturing_cost MONEY,
+    quantity INT,
+    production_startdate DATETIME,
+    production_enddate DATETIME NULL,
+    order_id INT NULL FOREIGN KEY REFERENCES Orders(order_id)
 );
+
 ```
 
 ### Orders
@@ -252,16 +248,14 @@ CREATE TABLE Production (
 
 ```sql
 -- Table: Orders
-CREATE TABLE Orders (
-    order_id int  NOT NULL IDENTITY,
-    customer_id int  NOT NULL,
-    order_date date  NOT NULL,
-    estimated_date date,
-    delivery_date date  NULL,
-    discount decimal(5,4)  NOT NULL CHECK (discount BETWEEN 0 AND 1 ),
-    CONSTRAINT required_date_after_order CHECK (estimated_date >= order_date),
-    CONSTRAINT delivery_date_after_order CHECK (delivery_date >= order_date),
-    CONSTRAINT Orders_pk PRIMARY KEY  (order_id)
+CREATE TABLE dbo.Orders (
+    order_id INT IDENTITY(1,1) PRIMARY KEY,
+    customer_id INT FOREIGN KEY REFERENCES Customers(customer_id),
+    order_date DATE,
+    estimated_date DATE,
+    delivery_date DATE NULL,
+    discount DECIMAL(4, 2) DEFAULT 0.00,
+    order_status NVARCHAR(50) DEFAULT 'Pending'
 );
 ```
 
@@ -279,13 +273,13 @@ CREATE TABLE Orders (
 
 ```sql
 -- Table: Order_Details
-CREATE TABLE Order_Details (
-    order_id int  NOT NULL,
-    product_id int  NOT NULL,
-    quantity int  NOT NULL CHECK (quantity > 0),
-    unit_price money  NOT NULL CHECK (unit_price > 0),
-    extra_remarks nvarchar(200)  NULL,
-    CONSTRAINT Order_Details_pk PRIMARY KEY  (order_id,product_id)
+CREATE TABLE dbo.Order_Details (
+    order_id INT FOREIGN KEY REFERENCES Orders(order_id),
+    product_id INT FOREIGN KEY REFERENCES Products(product_id),
+    quantity INT,
+    unit_price MONEY,
+    extra_remarks NVARCHAR(200) NULL,
+    PRIMARY KEY (order_id, product_id)
 );
 ```
 
@@ -302,12 +296,12 @@ CREATE TABLE Order_Details (
 
 ```sql
 -- Table: Payments
-CREATE TABLE Payments (
-    order_id int  NOT NULL,
-    paid_amount money  NOT NULL CHECK (paid_amount > 0),
-    payment_type nvarchar(20)  NOT NULL,
-    payment_date datetime  NOT NULL,
-    CONSTRAINT Payments_pk PRIMARY KEY  (order_id)
+CREATE TABLE dbo.Payments (
+    payment_id INT IDENTITY(1,1) PRIMARY KEY,
+    order_id INT FOREIGN KEY REFERENCES Orders(order_id),
+    paid_amount MONEY,
+    payment_type NVARCHAR(20),
+    payment_date DATE
 );
 ```
 
@@ -324,12 +318,11 @@ CREATE TABLE Payments (
 
 ```sql
 -- Table: Cancelled_Orders
-CREATE TABLE Cancelled_Orders (
-    order_id int  NOT NULL,
-    cancellation_date datetime  NOT NULL,
-    reason nvarchar(500)  NOT NULL,
-    compensation money  NOT NULL CHECK (compensation >= 0),
-    CONSTRAINT Cancelled_Orders_pk PRIMARY KEY  (order_id)
+CREATE TABLE dbo.Cancelled_Orders (
+    order_id INT PRIMARY KEY FOREIGN KEY REFERENCES Orders(order_id),
+    cancellation_date DATETIME,
+    reason NVARCHAR(200),
+    compensation MONEY
 );
 ```
 
@@ -344,11 +337,11 @@ CREATE TABLE Cancelled_Orders (
 #### Kod DDL
 
 ```sql
--- Table: Calendar
-CREATE TABLE Order_Status_History
+-- Table: Order_Status_History
+CREATE TABLE dbo.Order_Status_History
 (
     order_id           int         NOT NULL,
-    order_status       nvarchar(5) NOT NULL,
+    order_status       nvarchar(50) NOT NULL,
     status_change_date date        NOT NULL,
     CONSTRAINT order_id PRIMARY KEY (order_id)
 );
@@ -371,16 +364,15 @@ CREATE TABLE Order_Status_History
 
 ```sql
 -- Table: Customers
-CREATE TABLE Customers (
-    customer_id int  NOT NULL IDENTITY,
-    address nvarchar(100)  NOT NULL,
-    city nvarchar(30)  NOT NULL,
-    region nvarchar(50)  NOT NULL,
-    country nvarchar(50)  NOT NULL,
-    postal_code nvarchar(10)  NOT NULL,
-    contact_email nvarchar(100)  NOT NULL CHECK (contact_email LIKE '%_@__%.__%'),
-    phone nvarchar(15)  NOT NULL,
-    CONSTRAINT Customers_pk PRIMARY KEY  (customer_id)
+CREATE TABLE dbo.Customers (
+    customer_id INT IDENTITY(1,1) PRIMARY KEY,
+    address NVARCHAR(100),
+    city NVARCHAR(50),
+    region NVARCHAR(50),
+    country NVARCHAR(50),
+    postal_code NVARCHAR(20),
+    contact_email NVARCHAR(100),
+    phone NVARCHAR(50)
 );
 ```
 
@@ -397,12 +389,11 @@ CREATE TABLE Customers (
 
 ```sql
 -- Table: Individual_Customers
-CREATE TABLE Individual_Customers (
-    customer_id int  NOT NULL,
-    name nvarchar(100)  NOT NULL,
-    surname nvarchar(100)  NOT NULL,
-    title_of_courtesy nvarchar(10)  NOT NULL,
-    CONSTRAINT Individual_Customers_pk PRIMARY KEY  (customer_id)
+CREATE TABLE dbo.Individual_Customers (
+    customer_id INT PRIMARY KEY FOREIGN KEY REFERENCES Customers(customer_id),
+    name NVARCHAR(50),
+    surname NVARCHAR(50),
+    title_of_courtesy NVARCHAR(20)
 );
 ```
 
@@ -420,13 +411,12 @@ CREATE TABLE Individual_Customers (
 
 ```sql
 -- Table: Company_Customers
-CREATE TABLE Company_Customers (
-    customer_id int  NOT NULL,
-    company_name nvarchar(100)  NOT NULL,
-    contact_person_name nvarchar(100)  NOT NULL,
-    contact_person_surname nvarchar(100)  NOT NULL,
-    nip_number nvarchar(10)  NOT NULL,
-    CONSTRAINT Company_Customers_pk PRIMARY KEY  (customer_id)
+CREATE TABLE dbo.Company_Customers (
+    customer_id INT PRIMARY KEY FOREIGN KEY REFERENCES Customers(customer_id),
+    company_name NVARCHAR(100),
+    contact_person_name NVARCHAR(50),
+    contact_person_surname NVARCHAR(50),
+    nip_number NVARCHAR(20)
 );
 ```
 
@@ -538,7 +528,7 @@ ALTER TABLE Order_Status_History ADD CONSTRAINT Order_Status_History_Orders
 
 ## Widoki
 
-1. **PartsPrice** - pokazuje cenę części dla produktów, od najdroższego do najtańszego
+1. **PartsPrice** - pokazuje łączną cenę wszystkich części potrzebnych do wyprodukowania każdego produktu (`craft_price`).
 
 ```sql
 CREATE VIEW Parts_Price AS
@@ -548,15 +538,14 @@ CREATE VIEW Parts_Price AS
         GROUP BY pp.product_id, p.product_name
 ```
 
-2. **Product_Profts** - pokazuje zysk dla jednego produktu (bezwzględnie i procentowo)
+2. **Product_Profits** - prezentuje jednostkowy zysk produktu, wyrażony kwotowo oraz procentowo na podstawie ceny sprzedaży i kosztu wytworzenia.
 
 ```sql
 CREATE VIEW Product_Profits AS
     SELECT product_id, product_name, unit_price, manufacturing_cost, (unit_price-manufacturing_cost) AS profit, (manufacturing_cost/unit_price*100) AS percent_profit FROM Products
-    ORDER BY percent_profit DESC
 ```
 
-1. **Individual_Client_Orders** - dla każdego klienta indywidualnego pokazuje jego łączną liczbę złożonych zamówień, liczbę zamówień w trakcie realizacji, łączną sumę wydanych pieniędzy w sklepie (po zniżkach), łączną sumę otrzymanych rabatów, liczbę odwołanych zamówień oraz bilans konta, czyli różnicę między przelanymi pieniędzmi na konto naszej firmy, a sumą wartości wszystkich złożonych zamówień (bilans jest ujemny dla klientów z długiem dla firmy).
+3. **Individual_Client_Orders** - dla każdego klienta indywidualnego pokazuje jego łączną liczbę złożonych zamówień, liczbę zamówień w trakcie realizacji, łączną sumę wydanych pieniędzy w sklepie (po zniżkach), łączną sumę otrzymanych rabatów, liczbę odwołanych zamówień oraz bilans konta, czyli różnicę między przelanymi pieniędzmi na konto naszej firmy, a sumą wartości wszystkich złożonych zamówień (bilans jest ujemny dla klientów z długiem dla firmy).
 
 ```sql
 CREATE VIEW Individual_Clients_Orders AS
@@ -586,26 +575,9 @@ CREATE VIEW Individual_Clients_Orders AS
             ON ic.customer_id = cs.customer_id;
 ```
 
-2. **ViewCurrentProduction** - wyświetla produkty do wyprodukowania na podanej taśmie produkcyjnej.
-
-```sql
-CREATE PROCEDURE ViewCurrentProduction
-    @assembly_line INT
-AS
-    SELECT p.production_id, p.product_id, product_name, p.quantity, p.production_startdate, p.order_id
-    FROM Production p
-          INNER JOIN Products pr
-                     ON p.product_id = pr.product_id
-    WHERE production_enddate IS NULL
-        AND assembly_line = @assembly_line
-GO
-```
-
 ## Procedury/funkcje
 
-(dla każdej procedury/funkcji należy wkleić kod polecenia definiującego procedurę wraz z komentarzem)
-
-1. **AddOrder** - dodaje zamówienie do bazy danych
+1. **AddOrder** - dodaje zamówienie do bazy danych.
 
 ```sql
 CREATE PROCEDURE dbo.AddOrder(
@@ -613,32 +585,33 @@ CREATE PROCEDURE dbo.AddOrder(
     @estimated_date DATE = NULL,
     @delivery_date DATE = NULL,
     @discount DECIMAL(5, 4) = 0,
-    @order_status NVARCHAR(5) = 'PROCE'
+    @order_status NVARCHAR(50) = 'Processing'
 ) AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
-    DECLARE @order_date DATE;
-    SET @order_date = SYSDATETIME();
-
-    BEGIN TRY
-        INSERT INTO Orders
-        (customer_id, order_date, estimated_date, delivery_date, discount, order_status)
-        VALUES (@customer_id,
-                @order_date,
-                @estimated_date,
-                @delivery_date,
-                @discount,
-                @order_status)
-    END TRY
-    BEGIN CATCH
-        PRINT 'Order could not be added: ' + ERROR_MESSAGE();
-    END CATCH
+    INSERT INTO Orders (
+        customer_id,
+        order_date,
+        estimated_date,
+        delivery_date,
+        discount,
+        order_status
+    )
+    VALUES (
+        @customer_id,
+        SYSDATETIME(),
+        @estimated_date,
+        @delivery_date,
+        @discount,
+        @order_status
+    );
 END;
 GO
 ```
 
-2. **AddOrderDetail** - dodaje do bazy danych "składowe" zamówienia
+2. **AddOrderDetail** - dodaje produkt do zamówienia.
 
 ```sql
 CREATE PROCEDURE dbo.AddOrderDetail(
@@ -650,24 +623,20 @@ CREATE PROCEDURE dbo.AddOrderDetail(
 ) AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
-    BEGIN TRY
-        INSERT INTO Order_Details
+    INSERT INTO Order_Details
         (order_id, product_id, quantity, unit_price, extra_remarks)
-        VALUES (    @order_id ,
-    @product_id ,
-    @quantity ,
-    @unit_price ,
-    @extra_remarks)
-    END TRY
-    BEGIN CATCH
-        PRINT 'Order detail could not be added: ' + ERROR_MESSAGE();
-    END CATCH
+    VALUES (@order_id,
+            @product_id,
+            @quantity,
+            @unit_price,
+            @extra_remarks)
 END;
 GO
 ```
 
-3. **CancelOrder** - procedura usunięcia zamówienia wraz z przeniesieniem go do Cancelled_Orders
+3. **CancelOrder** - przenosi zamówienie do Cancelled_Orders.
 
 ```sql
 CREATE PROCEDURE dbo.CancelOrder(
@@ -677,56 +646,17 @@ CREATE PROCEDURE dbo.CancelOrder(
 ) AS
 BEGIN
     SET NOCOUNT ON;
-    DECLARE @cancellation_date DATE;
-    SET @cancellation_date = SYSDATETIME();
-    BEGIN TRY
-        INSERT INTO Cancelled_Orders
-            (order_id, cancellation_date, reason, compensation)
-        VALUES (@order_id, @cancellation_date,
-                @reason, @compensation)
-    END TRY
-    BEGIN CATCH
-        PRINT 'Order could not be cancelled: ' + ERROR_MESSAGE();
-    END CATCH
+    SET XACT_ABORT ON;
+
+    INSERT INTO Cancelled_Orders
+        (order_id, cancellation_date, reason, compensation)
+    VALUES (@order_id, SYSDATETIME(),
+            @reason, @compensation)
 END;
 GO
 ```
 
-4. **GenerateReceipt** - procedura generująca paragon do zamówienia
-
-```sql
-CREATE PROCEDURE GenerateReceipt(@order_id INT) AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT Orders.order_id,
-           Products.product_id,
-           product_name,
-           Products.unit_price,
-           quantity,
-           Products.unit_price * quantity AS product_total
-    FROM Orders
-             INNER JOIN Order_Details
-                        ON Orders.order_id = Order_Details.order_id
-             INNER JOIN Products ON
-        Order_Details.product_id = Products.product_id
-    WHERE Orders.order_id = @order_id;
-
-    SELECT Orders.order_id,
-           SUM(Products.unit_price * quantity)                  AS order_total,
-           discount,
-           SUM(Products.unit_price * quantity) * (1 - discount) AS after_discount
-    FROM Orders
-             INNER JOIN Order_Details
-                        ON Orders.order_id = Order_Details.order_id
-             INNER JOIN Products ON
-        Order_Details.product_id = Products.product_id
-    WHERE Orders.order_id = @order_id
-    GROUP BY Orders.order_id, discount;
-END;
-GO
-```
-
-5. **AddPart** - procedura dodania nowej części
+4. **AddPart** - dodaje nową część do bazy danych.
 
 ```sql
 CREATE PROCEDURE dbo.AddPart(
@@ -740,46 +670,23 @@ CREATE PROCEDURE dbo.AddPart(
 ) AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
-    BEGIN TRY
-        INSERT INTO Parts
-        (part_name, part_cost, supplier_id, units_in_stock, units_on_order, reorder_level, discontinued)
-        VALUES (@part_name,
-                @part_cost,
-                @supplier_id,
-                @units_in_stock,
-                @units_on_order,
-                @reorder_level,
-                @discontinued)
-    END TRY
-    BEGIN CATCH
-        PRINT 'Part could not be added: ' + ERROR_MESSAGE();
-    END CATCH
-END;
-GO
-
-CREATE PROCEDURE dbo.AddPartToProduct(
-    @part_id INT,
-    @product_id INT,
-    @quantity INT
-) AS
-BEGIN
-    SET NOCOUNT ON;
-
-    BEGIN TRY
-        INSERT INTO Product_Parts
-        VALUES (@part_id,
-                @product_id,
-                @quantity)
-    END TRY
-    BEGIN CATCH
-        PRINT 'Part could not be added to Product definition: ' + ERROR_MESSAGE();
-    END CATCH
+    INSERT INTO Parts
+    (part_name, part_cost, supplier_id, units_in_stock,
+     units_on_order, reorder_level, discontinued)
+    VALUES (@part_name,
+            @part_cost,
+            @supplier_id,
+            @units_in_stock,
+            @units_on_order,
+            @reorder_level,
+            @discontinued)
 END;
 GO
 ```
 
-6. **AddPartToProduct** - procedura dodająca część do definicji produktu
+5. **AddPartToProduct** - dodaje część do definicji produktu.
 
 ```sql
 CREATE PROCEDURE dbo.AddPartToProduct(
@@ -789,26 +696,23 @@ CREATE PROCEDURE dbo.AddPartToProduct(
 ) AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
-    BEGIN TRY
-        INSERT INTO Product_Parts
-        VALUES (@part_id,
-                @product_id,
-                @quantity)
-    END TRY
-    BEGIN CATCH
-        PRINT 'Part could not be added to Product definition: ' + ERROR_MESSAGE();
-    END CATCH
+    INSERT INTO Product_Parts
+    VALUES (@part_id,
+            @product_id,
+            @quantity)
 END;
 GO
 ```
 
-7. **ViewScheduledProduction** - procedura generująca/pokazująca zaplanowaną produkcję
+6. **ViewScheduledProduction** - wyświetla zaplanowaną produkcję.
 
 ```sql
-CREATE PROCEDURE ViewScheduledProduction(@product_id INT,
-                                         @start_date DATE,
-                                         @end_date DATE = NULL
+CREATE PROCEDURE ViewScheduledProduction(
+    @product_id INT,
+    @start_date DATE,
+    @end_date DATE = NULL
 ) AS
 BEGIN
     SET NOCOUNT ON;
@@ -832,28 +736,66 @@ BEGIN
         OR (production_enddate >= @start_date AND production_enddate <= @end_date))
 END;
 GO
+
+```
+
+7. **ViewCurrentProduction** - wyświetla produkty w trakcie produkcji na podanej taśmie produkcyjnej.
+
+```sql
+CREATE PROCEDURE ViewCurrentProduction
+    @assembly_line INT
+AS
+    SELECT p.production_id, p.product_id, product_name, p.quantity, p.production_startdate, p.order_id
+    FROM Production p
+          INNER JOIN Products pr
+                     ON p.product_id = pr.product_id
+    WHERE production_enddate IS NULL
+        AND assembly_line = @assembly_line
+GO
 ```
 
 8. **AddProduct** - dodaje nowy produkt do bazy danych.
 
 ```sql
-CREATE PROCEDURE AddProduct
-    (@product_name NVARCHAR(100), @unit_price MONEY, @manufactoring_cost MONEY,
-     @category_id INT, @production_time_unit INT, @quantity_in_stock INT,
-     @warehouse_sector INT, @production_level INT, @discontinued BIT)
+CREATE PROCEDURE AddProduct (
+    @product_name NVARCHAR(100),
+    @unit_price MONEY,
+    @manufacturing_cost MONEY,
+    @category_id INT,
+    @production_time_unit INT,
+    @quantity_in_stock INT,
+    @warehouse_sector INT,
+    @production_level INT,
+    @discontinued BIT)
 AS
 BEGIN
     BEGIN TRY
-        IF EXISTS(
-            SELECT *
-            FROM Products
-            WHERE product_name = @product_name
-            )
+        BEGIN TRANSACTION
+        IF EXISTS(SELECT * FROM Products WHERE product_name = @product_name)
             BEGIN
                 THROW 52000, N'Product already exists', 1;
             END
-        INSERT INTO Products(product_name, unit_price, manufacturing_cost, category_id, production_time_unit, quantity_in_stock, warehouse_sector, production_level, discontinued)
-        VALUES(@product_name, @unit_price, @manufactoring_cost, @category_id, @production_time_unit, @quantity_in_stock, @warehouse_sector, @production_level, @discontinued)
+
+        INSERT INTO Products(product_name,
+                             unit_price,
+                             manufacturing_cost,
+                             category_id,
+                             production_time_unit,
+                             quantity_in_stock,
+                             warehouse_sector,
+                             production_level,
+                             discontinued)
+        VALUES(@product_name,
+               @unit_price,
+               @manufacturing_cost,
+               @category_id,
+               @production_time_unit,
+               @quantity_in_stock,
+               @warehouse_sector,
+               @production_level,
+               @discontinued)
+
+        COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
         IF XACT_STATE() <> 0
@@ -866,7 +808,7 @@ BEGIN
 END
 ```
 
-9. **AddNewIndividualCustomer** - dodaje nowego klienta indywidualnego do bazy danych.
+9. **AddIndividualCustomer** - dodaje nowego klienta indywidualnego do bazy danych.
 
 ```sql
 CREATE PROCEDURE AddIndividualCustomer
@@ -916,7 +858,6 @@ BEGIN
     SET XACT_ABORT ON;
 
     BEGIN TRY
-        IF EXISTS(SELECT 1 FROM Company_Customers WHERE company_name = @company_name)
         IF EXISTS(SELECT * FROM Company_Customers WHERE company_name = @company_name)
         BEGIN
             DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Company with name "%s" already exists.', @company_name);
@@ -947,10 +888,10 @@ END
 GO
 ```
 
-11. **Last_Orders_From_Client** - generuje poprzednie zamówienia danego klienta, wraz ze zniżkami i wartością zamówienia przed/po zamówieniu
+11. **LastOrdersFromClient** - generuje poprzednie zamówienia danego klienta, wraz ze zniżkami i wartością zamówienia przed/po zniżce
 
 ```sql
-CREATE PROCEDURE Last_Orders_From_Client
+CREATE PROCEDURE LastOrdersFromClient
     @CustomerID INT,
     @DateFrom DATE,
     @DateTo DATE
@@ -982,10 +923,10 @@ BEGIN
 END;
 ```
 
-12. **Top_Product_Groups** - generuje listę najlepiej sprzedawanych produktów (wewnątrz danej kategorii) w tygodniu, miesiącu, roku, w podanym zakresie dat
+12. **TopProductGroups** - generuje listę najlepiej sprzedawanych produktów (wewnątrz danej kategorii) w tygodniu, miesiącu, roku, w podanym zakresie dat
 
 ```sql
-CREATE PROCEDURE Top_Product_Groups
+CREATE PROCEDURE TopProductGroups
     @DateFrom DATE,
     @DateTo DATE,
     @CategoryID INT
@@ -998,7 +939,7 @@ BEGIN
         -- wartości
         SUM(od.unit_price * od.quantity) AS total_before_discount,
         SUM(od.unit_price * od.quantity * od.discount) AS total_discount,
-        SUM(od.unit_price * od.quantity * (1 - od.discount)) AS total_after_discount,
+        SUM(od.unit_price * od.quantity * (1 - o.discount)) AS total_after_discount,
 
         -- grupowanie czasowe
         DATEPART(YEAR, o.order_date) AS year_no,
@@ -1027,10 +968,10 @@ BEGIN
 END;
 ```
 
-13. **Top_Products_Value** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
+13. **TopProductsValue** - generuje listę najbardziej dochodowych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat.
 
 ```sql
-CREATE PROCEDURE Top_Products_Value
+CREATE PROCEDURE TopProductsValue
     @date_from DATE,
     @date_to DATE
 AS
@@ -1038,27 +979,18 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
     BEGIN TRY
-        IF NOT EXISTS(SELECT 1 FROM Orders WHERE order_date BETWEEN @date_from AND @date_to)
-            BEGIN
-                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('No products between selected dates');
-                THROW 55000, @msg, 1;
-            END
-        --date from i date to w złej kolejności
-        IF @DateFrom > @DateTo
+        IF @date_from > @date_to
             BEGIN
                 DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Date To is earlier than Date From');
                 THROW 56000, @msg, 1;
             END
-        SELECT 
+        SELECT
             p.product_id,
             p.product_name,
-    SELECT
-        p.product_id,
-        p.product_name,
 
             SUM(od.unit_price * od.quantity) AS total_before_discount,
-            SUM(od.unit_price * od.quantity * od.discount) AS total_discount,
-            SUM(od.unit_price * od.quantity * (1 - od.discount)) AS total_after_discount,
+            SUM(od.unit_price * od.quantity * o.discount) AS total_discount,
+            SUM(od.unit_price * od.quantity * (1 - o.discount)) AS total_after_discount,
 
             DATEPART(YEAR, o.order_date) AS year_no,
             DATEPART(MONTH, o.order_date) AS month_no,
@@ -1068,10 +1000,10 @@ BEGIN
         INNER JOIN Order_Details od ON od.product_id = p.product_id
         INNER JOIN Orders o ON o.order_id = od.order_id
 
-        WHERE 
-            o.order_date BETWEEN @DateFrom AND @DateTo
+        WHERE
+            o.order_date BETWEEN @date_from AND @date_to
 
-        GROUP BY 
+        GROUP BY
             ROLLUP (
                 p.product_id,
                 p.product_name,
@@ -1080,7 +1012,7 @@ BEGIN
                 DATEPART(WEEK, o.order_date)
             )
 
-        ORDER BY 
+        ORDER BY
             total_after_discount DESC;
     END TRY
     BEGIN CATCH
@@ -1089,10 +1021,10 @@ BEGIN
 END;
 ```
 
-14. **Top_Products_Number** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
+14. **TopProductsNumber** - generuje listę najlepiej sprzedawanych produktów w tygodniu, miesiącu, roku, w podanym zakresie dat
 
 ```sql
-CREATE PROCEDURE Top_Products_Number
+CREATE PROCEDURE TopProductsNumber
     @DateFrom DATE,
     @DateTo DATE
 AS
@@ -1105,18 +1037,12 @@ BEGIN
                 DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('No products between selected dates');
                 THROW 55000, @msg, 1;
             END
-        --date from i date to w złej kolejności
         IF @DateFrom > @DateTo
             BEGIN
-                DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Date To is earlier than Date From');
-                THROW 56000, @msg, 1;
+                DECLARE @msg1 NVARCHAR(2048) = FORMATMESSAGE('Date To is earlier than Date From');
+                THROW 56000, @msg1, 1;
             END
-        SELECT 
-    WHERE
-        o.order_date BETWEEN @DateFrom AND @DateTo
-
-    GROUP BY
-        ROLLUP (
+        SELECT
             p.product_id,
             p.product_name,
 
@@ -1130,10 +1056,10 @@ BEGIN
         INNER JOIN Order_Details od ON od.product_id = p.product_id
         INNER JOIN Orders o ON o.order_id = od.order_id
 
-        WHERE 
+        WHERE
             o.order_date BETWEEN @DateFrom AND @DateTo
 
-        GROUP BY 
+        GROUP BY
             ROLLUP (
                 p.product_id,
                 p.product_name,
@@ -1142,18 +1068,17 @@ BEGIN
                 DATEPART(WEEK, o.order_date)
             )
 
-        ORDER BY 
+        ORDER BY
             total_number DESC;
     END TRY
     BEGIN CATCH
         ;THROW;
     END CATCH;
-    ORDER BY
-        total_after_discount DESC;
 END;
+GO
 ```
 
-15.  **TopProductsWeek** - generuje listę najlepiej sprzedawanych produktów w tygodniu
+15.**TopProductsWeek** - generuje listę najlepiej sprzedawanych produktów w zadanym tygodniu
 
 ```sql
         CREATE PROCEDURE TopProductsWeek
@@ -1182,7 +1107,7 @@ END;
     END;
 ```
 
-16.  **TopProductsMonth** - generuje listę najlepiej sprzedawanych produktów w miesiącu
+16. **TopProductsMonth** - generuje listę najlepiej sprzedawanych produktów w miesiącu
 
 ```sql
     CREATE PROCEDURE TopProductsMonth
@@ -1211,7 +1136,7 @@ END;
     END;
 ```
 
-17.  **TopProductsYear** - generuje listę najlepiej sprzedawanych produktów w roku
+17. **TopProductsYear** - generuje listę najlepiej sprzedawanych produktów w roku
 
 ```sql
     CREATE PROCEDURE TopProductsYear
@@ -1233,10 +1158,122 @@ END;
     END;
 ```
 
+18. **EstimateOrderDate** - dla danego zamówienia estymuje datę jego dostarczenia uwzględniając:
+
+- czy produkty nie zostały już wyprodukowane (nie są na magazynie),
+- aktualną produkcję (obciążenie na liniach produkcyjnych, to ile zajmie wyprodukowanie każdego produktu),
+- dni wolne.
+
+```sql
+CREATE PROCEDURE EstimateOrderDate(@order_id INT)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        IF (EXISTS(SELECT * FROM Orders WHERE order_id = @order_id AND estimated_date IS NOT NULL))
+            BEGIN
+                DECLARE @msg NVARCHAR(2048)
+                    = FORMATMESSAGE('A delivery date has already been estimated for "%i" order.', @order_id);
+                THROW 52000, @msg, 1;
+            END
+
+        BEGIN TRANSACTION;
+
+        DECLARE @days_to_finish_order INT;
+        DECLARE @estimated_date DATETIME;
+        WITH line_occupancy AS (
+            SELECT Assembly_Lines.assembly_line,
+                   max_capability,
+                COALESCE(SUM(quantity * production_time_unit) /
+                   CAST(max_capability AS DECIMAL(9,2)), 0)
+                 AS line_days_occupation
+            FROM Production
+            INNER JOIN Products ON Production.product_id = Products.product_id
+                AND  production_enddate IS NULL AND order_id <> @order_id
+            RIGHT JOIN Assembly_Lines ON
+                Production.assembly_line = Assembly_Lines.assembly_line
+            GROUP BY Assembly_Lines.assembly_line, max_capability
+        )
+
+        SELECT TOP 1 @days_to_finish_order =
+                     CEILING(((quantity * production_time_unit) / max_capability)
+                   + line_occupancy.line_days_occupation)
+        FROM Production
+        INNER JOIN Products ON Production.product_id = Products.product_id
+        INNER JOIN line_occupancy
+            ON line_occupancy.assembly_line = Production.assembly_line
+        WHERE production.order_id = @order_id
+        ORDER BY (CEILING(((quantity * production_time_unit) / max_capability)
+                   + line_occupancy.line_days_occupation)) DESC;
+
+        SELECT @estimated_date = calendar_date FROM Calendar
+            WHERE calendar_date >= SYSDATETIME() AND day_off = 0
+        ORDER BY calendar_date OFFSET (@days_to_finish_order) ROWS FETCH NEXT 1 ROW ONLY;
+
+        UPDATE Orders SET estimated_date
+            = @estimated_date WHERE order_id = @order_id;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            BEGIN
+                ROLLBACK TRANSACTION;
+            END
+
+            ;THROW;
+    END CATCH
+END
+GO
+```
+
+19. **ViewOrderItems** - dla każdego zamówienia pokazuje informacje o zamówionych produktach.
+
+```sql
+CREATE PROCEDURE ViewOrderItems(@order_id INT) AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    SELECT Orders.order_id,
+           Products.product_id,
+           product_name,
+           Products.unit_price,
+           quantity,
+           Products.unit_price * quantity AS product_total
+    FROM Orders
+             INNER JOIN Order_Details
+                        ON Orders.order_id = Order_Details.order_id
+             INNER JOIN Products ON
+        Order_Details.product_id = Products.product_id
+    WHERE Orders.order_id = @order_id;
+END;
+GO
+```
+
+20. **ViewOrderSummary** - dla każdego zamówienia podsumowuje jego koszt, zniżkę, i cenę po zniżce.
+
+```sql
+CREATE PROCEDURE ViewOrderSummary(@order_id INT) AS
+BEGIN
+    SELECT Orders.order_id,
+           SUM(Products.unit_price * quantity) AS order_total,
+           discount,
+           SUM(Products.unit_price * quantity) * (1 - discount) AS after_discount
+    FROM Orders
+             INNER JOIN Order_Details
+                        ON Orders.order_id = Order_Details.order_id
+             INNER JOIN Products ON
+        Order_Details.product_id = Products.product_id
+    WHERE Orders.order_id = @order_id
+    GROUP BY Orders.order_id, discount;
+END;
+GO
+```
 
 ## Triggery
-
-(dla każdego triggera należy wkleić kod polecenia definiującego trigger wraz z komentarzem)
 
 1. **OrderStatusChange** - obsługuje zmiany statusu zamówienia, wraz z postępem jego realizacji.
 
