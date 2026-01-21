@@ -238,15 +238,15 @@ CREATE TABLE Production (
 
 ### Orders
 
-| Kolumna        | Typ          | Klucz  | Opis/Uwagi                                 |     |
-| -------------- | ------------ | ------ | ------------------------------------------ | --- |
+| Kolumna        | Typ          | Klucz  | Opis/Uwagi                                 |
+| -------------- | ------------ | ------ | ------------------------------------------ |
 | order_id       | int          | główny | Identyfikator zamówienia                   |
 | customer_id    | int          | obcy   | Identyfikator klienta                      |
 | order_date     | date         |        | Data złożenia zamówienia                   |
 | estimated_date | date         |        | Zadeklarowana data dostarczenia zamówienia |
 | delivery_date  | date         |        | Rzeczywista data dostarczenia zamówienia   |
-| discount       | decimal(5,4) |        | Zniżka na całe zamówienie                  |     |
-| order_status   | nvarchar(5)  |        | Aktualny status zamówienia                 |     |
+| discount       | decimal(5,4) |        | Zniżka na całe zamówienie                  |
+| order_status   | nvarchar(5)  |        | Aktualny status zamówienia                 |
 
 #### Kod DDL
 
@@ -267,12 +267,12 @@ CREATE TABLE Orders (
 
 ### OrderDetails
 
-| Kolumna       | Typ           | Klucz        | Opis/Uwagi               |     |
-| ------------- | ------------- | ------------ | ------------------------ | --- |
+| Kolumna       | Typ           | Klucz        | Opis/Uwagi               |
+| ------------- | ------------- | ------------ | ------------------------ |
 | order_id      | int           | główny, obcy | Identyfikator zamówienia |
 | product_id    | int           | główny, obcy | Identyfikator produktu   |
 | quantity      | int           |              | Liczba zamówionych sztuk |
-| unit_price    | money         |              | Cena za sztukę           |     |
+| unit_price    | money         |              | Cena za sztukę           |
 | extra_remarks | nvarchar(200) |              | Uwagi dodatkowe          |
 
 #### Kod DDL
@@ -538,29 +538,34 @@ ALTER TABLE Order_Status_History ADD CONSTRAINT Order_Status_History_Orders
 
 ## Widoki
 
-1. **Individual_Client_Orders** - dla każdego klienta indywidualnego pokazuje jego łączną liczbę złożonych zamówień, liczbę zamówień w trakcie realizacji, łączną sumę wydanych pieniędzy w sklepie (po zniżkach), łączną sumę otrzymanych rabatów, liczbę odwołanych zamówień oraz dług.
+1. **Individual_Client_Orders** - dla każdego klienta indywidualnego pokazuje jego łączną liczbę złożonych zamówień, liczbę zamówień w trakcie realizacji, łączną sumę wydanych pieniędzy w sklepie (po zniżkach), łączną sumę otrzymanych rabatów, liczbę odwołanych zamówień oraz bilans konta, czyli różnicę między przelanymi pieniędzmi na konto naszej firmy, a sumą wartości wszystkich złożonych zamówień (bilans jest ujemny dla klientów z długiem dla firmy).
 
 ```sql
-CREATE VIEW Individual_Client_Orders AS (
-SELECT c.customer_id, ic.name, ic.surname,
-       ISNULL(SUM(o.order_id), 0) AS total_orders
-       COUNT(*)-COUNT(o.delivery_date) AS handled_orders,
-       ISNULL(SUM(od.quantity * od.unit_price * (1 - o.discount)),0) AS total_money_spend,
-       ISNULL(SUM(od.quantity * od.unit_price * o.discount),0) AS total_money_saved,
-       COUNT(co.order_id) AS cancelled_orders_counter,
-       ISNULL(SUM(od.quantity * od.unit_price * (1 - o.discount)),0) - SUM(p.paid_amount) AS loan
-FROM Customers c RIGHT JOIN Individual_Customers ic
-        ON c.customer_id = ic.customer_id
-    LEFT JOIN Orders o
-        ON c.customer_id = o.customer_id
-    LEFT JOIN Payments p
-        ON p.order_id = o.order_id
-    LEFT JOIN Cancelled_Orders co
-        ON o.order_id = co.order_id
-    LEFT JOIN Order_Details od
-        ON o.order_id = od.order_id
-GROUP BY c.customer_id, ic.name, ic.surname
-);
+CREATE VIEW Individual_Clients_Orders AS
+    WITH Customer_Stats AS (
+        SELECT o.customer_id,
+            COUNT (DISTINCT o.order_id) AS total_orders,
+            COUNT (o.order_id) - COUNT (o.delivery_date) AS handled_orders,
+            COALESCE (SUM (od.quantity * od.unit_price * (1 - o.discount)), 0) AS total_money_spent,
+            COALESCE (SUM (od.quantity * od.unit_price * o.discount), 0) AS total_money_saved,
+            COUNT (DISTINCT co.order_id) AS cancelled_orders_counter,
+            COALESCE (SUM (od.quantity * od.unit_price * (1 - o.discount)) - SUM (p.paid_amount), 0) AS balance
+        FROM Orders o
+        LEFT JOIN Order_Details od
+            ON o.order_id = od.order_id
+        LEFT JOIN Payments p
+            ON o.order_id = p.order_id
+        LEFT JOIN Cancelled_Orders co
+            ON o.order_id = co.order_id
+        GROUP BY o.customer_id
+    )
+    SELECT ic.customer_id, ic.name, ic.surname,
+           total_orders, handled_orders,
+           total_money_spent, total_money_saved,
+           cancelled_orders_counter, balance
+    FROM Individual_Customers ic
+        LEFT JOIN Customer_Stats cs
+            ON ic.customer_id = cs.customer_id;
 ```
 
 2. **ViewCurrentProduction** - wyświetla produkty do wyprodukowania na podanej taśmie produkcyjnej.
@@ -811,10 +816,10 @@ END;
 GO
 ```
 
-8. **AddNewProduct** - dodaje nowy produkt do bazy danych.
+8. **AddProduct** - dodaje nowy produkt do bazy danych.
 
 ```sql
-CREATE PROCEDURE AddNewProduct
+CREATE PROCEDURE AddProduct
     (@product_name NVARCHAR(100), @unit_price MONEY, @manufactoring_cost MONEY,
      @category_id INT, @production_time_unit INT, @quantity_in_stock INT,
      @warehouse_sector INT, @production_level INT, @discontinued BIT)
