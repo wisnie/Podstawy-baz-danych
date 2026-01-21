@@ -1084,6 +1084,85 @@ BEGIN
 END;
 ```
 
+15.  **TopProductsWeek** - generuje listę najlepiej sprzedawanych produktów w tygodniu
+
+```sql
+        CREATE PROCEDURE TopProductsWeek
+        @week_number INT,
+        @year INT
+    AS
+    BEGIN
+        BEGIN TRY
+            SET NOCOUNT ON;
+                IF @week_number > 53
+                    BEGIN
+                        DECLARE @msg1 NVARCHAR(2048) = FORMATMESSAGE('Week number does not exist');
+                        THROW 56000, @msg1, 1;
+                    END
+            SELECT p.product_id, p.product_name, SUM(od.unit_price * od.quantity) AS val FROM Products p
+            INNER JOIN Order_Details od ON od.product_id = p.product_id
+            INNER JOIN Orders o ON o.order_id = od.order_id
+            WHERE DATEPART(ISO_WEEK, o.order_date) = @week_number
+            AND YEAR(o.order_date) = @year
+            GROUP BY p.product_id, p.product_name
+            ORDER BY val DESC
+        END TRY
+        BEGIN CATCH
+            ;THROW;
+        END CATCH;
+    END;
+```
+
+16.  **TopProductsMonth** - generuje listę najlepiej sprzedawanych produktów w miesiącu
+
+```sql
+    CREATE PROCEDURE TopProductsMonth
+        @month_number INT,
+        @year INT
+    AS
+    BEGIN
+        BEGIN TRY
+            SET NOCOUNT ON;
+                IF @month_number > 12
+                    BEGIN
+                        DECLARE @msg1 NVARCHAR(2048) = FORMATMESSAGE('Month number does not exist');
+                        THROW 56000, @msg1, 1;
+                    END
+            SELECT p.product_id, p.product_name, SUM(od.unit_price * od.quantity) AS val FROM Products p
+            INNER JOIN Order_Details od ON od.product_id = p.product_id
+            INNER JOIN Orders o ON o.order_id = od.order_id
+            WHERE MONTH(o.order_date) = @month_number
+            AND YEAR(o.order_date) = @year
+            GROUP BY p.product_id, p.product_name
+            ORDER BY val DESC
+        END TRY
+        BEGIN CATCH
+            ;THROW;
+        END CATCH;
+    END;
+```
+
+17.  **TopProductsYear** - generuje listę najlepiej sprzedawanych produktów w roku
+
+```sql
+    CREATE PROCEDURE TopProductsYear
+    @year INT
+    AS
+    BEGIN
+        BEGIN TRY
+            SET NOCOUNT ON;
+            SELECT p.product_id, p.product_name, SUM(od.unit_price * od.quantity) AS val FROM Products p
+            INNER JOIN Order_Details od ON od.product_id = p.product_id
+            INNER JOIN Orders o ON o.order_id = od.order_id
+            WHERE YEAR(o.order_date) = @year
+            GROUP BY p.product_id, p.product_name
+            ORDER BY val DESC
+        END TRY
+        BEGIN CATCH
+            ;THROW;
+        END CATCH;
+    END;
+```
 
 
 ## Triggery
