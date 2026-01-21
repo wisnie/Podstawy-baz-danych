@@ -1329,10 +1329,10 @@ END;
 GO
 ```
 
-3. **Update_Parts_Inventory** - aktualizuje liczbę poszczególnych części na podstawie wykonanego zamówienia
+3. **UpdatePartsInventory** - aktualizuje liczbę poszczególnych części na podstawie wykonanego zamówienia
 
 ```sql
-CREATE TRIGGER update_parts_inventory
+CREATE TRIGGER updatePartsInventory
 ON Production
 AFTER INSERT
 AS
@@ -1344,7 +1344,6 @@ BEGIN
     JOIN inserted i ON pp.product_id = i.product_id;
 END;
 ```
-
 
 # 4. Indeksy
 
