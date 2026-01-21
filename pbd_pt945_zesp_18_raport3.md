@@ -757,23 +757,45 @@ GO
 8. **AddProduct** - dodaje nowy produkt do bazy danych.
 
 ```sql
-CREATE PROCEDURE AddProduct
-    (@product_name NVARCHAR(100), @unit_price MONEY, @manufactoring_cost MONEY,
-     @category_id INT, @production_time_unit INT, @quantity_in_stock INT,
-     @warehouse_sector INT, @production_level INT, @discontinued BIT)
+CREATE PROCEDURE AddProduct (
+    @product_name NVARCHAR(100),
+    @unit_price MONEY,
+    @manufacturing_cost MONEY,
+    @category_id INT,
+    @production_time_unit INT,
+    @quantity_in_stock INT,
+    @warehouse_sector INT,
+    @production_level INT,
+    @discontinued BIT)
 AS
 BEGIN
     BEGIN TRY
-        IF EXISTS(
-            SELECT *
-            FROM Products
-            WHERE product_name = @product_name
-            )
+        BEGIN TRANSACTION
+        IF EXISTS(SELECT * FROM Products WHERE product_name = @product_name)
             BEGIN
                 THROW 52000, N'Product already exists', 1;
             END
-        INSERT INTO Products(product_name, unit_price, manufacturing_cost, category_id, production_time_unit, quantity_in_stock, warehouse_sector, production_level, discontinued)
-        VALUES(@product_name, @unit_price, @manufactoring_cost, @category_id, @production_time_unit, @quantity_in_stock, @warehouse_sector, @production_level, @discontinued)
+
+        INSERT INTO Products(product_name,
+                             unit_price,
+                             manufacturing_cost,
+                             category_id,
+                             production_time_unit,
+                             quantity_in_stock,
+                             warehouse_sector,
+                             production_level,
+                             discontinued)
+        VALUES(@product_name,
+               @unit_price,
+               @manufacturing_cost,
+               @category_id,
+               @production_time_unit,
+               @quantity_in_stock,
+               @warehouse_sector,
+               @production_level,
+               @discontinued)
+
+        COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
         IF XACT_STATE() <> 0
@@ -836,7 +858,6 @@ BEGIN
     SET XACT_ABORT ON;
 
     BEGIN TRY
-        IF EXISTS(SELECT 1 FROM Company_Customers WHERE company_name = @company_name)
         IF EXISTS(SELECT * FROM Company_Customers WHERE company_name = @company_name)
         BEGIN
             DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('Company with name "%s" already exists.', @company_name);
@@ -918,7 +939,7 @@ BEGIN
         -- wartości
         SUM(od.unit_price * od.quantity) AS total_before_discount,
         SUM(od.unit_price * od.quantity * od.discount) AS total_discount,
-        SUM(od.unit_price * od.quantity * (1 - od.discount)) AS total_after_discount,
+        SUM(od.unit_price * od.quantity * (1 - o.discount)) AS total_after_discount,
 
         -- grupowanie czasowe
         DATEPART(YEAR, o.order_date) AS year_no,
@@ -1253,8 +1274,6 @@ GO
 ```
 
 ## Triggery
-
-(dla każdego triggera należy wkleić kod polecenia definiującego trigger wraz z komentarzem)
 
 1. **OrderStatusChange** - obsługuje zmiany statusu zamówienia, wraz z postępem jego realizacji.
 
