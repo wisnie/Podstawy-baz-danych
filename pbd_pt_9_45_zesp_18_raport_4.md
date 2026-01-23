@@ -699,8 +699,9 @@ BEGIN
     SET XACT_ABORT ON;
 
     INSERT INTO Product_Parts
-    VALUES (@part_id,
-            @product_id,
+    (product_id, part_id, quantity)
+    VALUES (@product_id,
+            @part_id,
             @quantity)
 END;
 GO
