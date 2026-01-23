@@ -812,7 +812,7 @@ END
 
 ```sql
 CREATE PROCEDURE AddIndividualCustomer
-    (@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50),
+    (@address NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50),
      @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100),
      @phone nvarchar(15), @name NVARCHAR(100), @surname NVARCHAR(100),
      @title_of_courtesy NVARCHAR(10))
@@ -824,7 +824,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
             INSERT INTO Customers(address, city, region, country, postal_code, contact_email, phone)
-            VALUES(@adress, @city, @region, @country, @postal_code, @contact_email, @phone)
+            VALUES(@address, @city, @region, @country, @postal_code, @contact_email, @phone)
 
             DECLARE @customer_id INT = SCOPE_IDENTITY();
 
@@ -892,9 +892,9 @@ GO
 
 ```sql
 CREATE PROCEDURE LastOrdersFromClient
-    @CustomerID INT,
-    @DateFrom DATE,
-    @DateTo DATE
+    @customer_id INT,
+    @date_from DATE,
+    @date_to DATE
 AS
 BEGIN
     SELECT
@@ -911,8 +911,8 @@ BEGIN
     INNER JOIN Order_Details od
         ON o.order_id = od.order_id
     WHERE
-        c.customer_id = @CustomerID
-        AND o.order_date BETWEEN @DateFrom AND @DateTo
+        c.customer_id = @customer_id
+        AND o.order_date BETWEEN @date_from AND @date_to
     GROUP BY
         c.customer_id,
         o.order_id,
@@ -927,9 +927,9 @@ END;
 
 ```sql
 CREATE PROCEDURE TopProductGroups
-    @DateFrom DATE,
-    @DateTo DATE,
-    @CategoryID INT
+    @date_from DATE,
+    @date_to DATE,
+    @category_id INT
 AS
 BEGIN
     SELECT
@@ -951,8 +951,8 @@ BEGIN
     INNER JOIN Orders o ON o.order_id = od.order_id
 
     WHERE
-        p.category_id = @CategoryID
-        AND o.order_date BETWEEN @DateFrom AND @DateTo
+        p.category_id = @category_id
+        AND o.order_date BETWEEN @date_from AND @date_to
 
     GROUP BY
         ROLLUP (
@@ -1025,19 +1025,19 @@ END;
 
 ```sql
 CREATE PROCEDURE TopProductsNumber
-    @DateFrom DATE,
-    @DateTo DATE
+    @date_from DATE,
+    @date_to DATE
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
     BEGIN TRY
-        IF NOT EXISTS(SELECT 1 FROM Orders WHERE order_date BETWEEN @DateFrom AND @DateTo)
+        IF NOT EXISTS(SELECT 1 FROM Orders WHERE order_date BETWEEN @date_from AND @date_to)
             BEGIN
                 DECLARE @msg NVARCHAR(2048) = FORMATMESSAGE('No products between selected dates');
                 THROW 55000, @msg, 1;
             END
-        IF @DateFrom > @DateTo
+        IF @date_from > @date_to
             BEGIN
                 DECLARE @msg1 NVARCHAR(2048) = FORMATMESSAGE('Date To is earlier than Date From');
                 THROW 56000, @msg1, 1;
@@ -1057,7 +1057,7 @@ BEGIN
         INNER JOIN Orders o ON o.order_id = od.order_id
 
         WHERE
-            o.order_date BETWEEN @DateFrom AND @DateTo
+            o.order_date BETWEEN @date_from AND @date_to
 
         GROUP BY
             ROLLUP (
@@ -1081,9 +1081,9 @@ GO
 15.**TopProductsWeek** - generuje listę najlepiej sprzedawanych produktów w zadanym tygodniu
 
 ```sql
-        CREATE PROCEDURE TopProductsWeek
-        @week_number INT,
-        @year INT
+CREATE PROCEDURE TopProductsWeek
+    @week_number INT,
+    @year INT
     AS
     BEGIN
         BEGIN TRY
