@@ -1306,9 +1306,9 @@ END;
 
 ```sql
 CREATE TRIGGER UpdateProductionAndWarehouseWhenNewOrder
-ON Order_Details
-AFTER INSERT
-AS
+    ON Order_Details
+    AFTER INSERT
+    AS
 BEGIN
     SET NOCOUNT ON;
     -- Jeżeli liczba zamówionych produktów jest mniejsza od liczby produktów na magzynie
@@ -1338,16 +1338,16 @@ GO
 3. **UpdatePartsInventory** - aktualizuje liczbę poszczególnych części na podstawie wykonanego zamówienia
 
 ```sql
-CREATE TRIGGER updatePartsInventory
-ON Production
-AFTER INSERT
-AS
+CREATE TRIGGER dbo.UpdatePartsInventory
+    ON Production
+    AFTER INSERT
+    AS
 BEGIN
     UPDATE p
-    SET p.units_in_stock = p.units_in_stock - (pp.quantity * i.quantity)
+        SET p.units_in_stock = p.units_in_stock - (pp.quantity * i.quantity)
     FROM Parts p
-    JOIN Product_Parts pp ON p.part_id = pp.part_id
-    JOIN inserted i ON pp.product_id = i.product_id;
+        JOIN Product_Parts pp ON p.part_id = pp.part_id
+        JOIN inserted i ON pp.product_id = i.product_id;
 END;
 ```
 
