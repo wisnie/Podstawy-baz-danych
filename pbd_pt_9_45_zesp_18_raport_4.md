@@ -1243,8 +1243,9 @@ BEGIN
         ORDER BY  CEILING((SUM((quantity * production_time_unit)) / max_capability)
                    + line_occupancy.line_days_occupation) DESC;
 
+        -- CAST(CAST(SYSDATETIME() AS DATE) AS DATETIME) używamy, żeby czas był ustawiony na północ.
         SELECT @estimated_date = calendar_date FROM Calendar
-            WHERE calendar_date >= DATETRUNC(day, SYSDATETIME()) AND day_off = 0
+            WHERE calendar_date >= CAST(CAST(SYSDATETIME() AS DATE) AS DATETIME) AND day_off = 0
         ORDER BY calendar_date OFFSET (@days_to_finish_order) ROWS FETCH NEXT 1 ROW ONLY;
 
         UPDATE Orders SET estimated_date
