@@ -579,6 +579,21 @@ CREATE VIEW Individual_Clients_Orders AS
             ON ic.customer_id = cs.customer_id;
 ```
 
+4. **Products_Customers** - widok produktów z perspektywy klienta.
+
+```sql
+CREATE VIEW Products_Customers AS
+    SELECT product_id,
+           product_name,
+           category_name,
+           unit_price,
+           quantity_in_stock
+    FROM Products
+    INNER JOIN
+        dbo.Categories C ON Products.category_id = C.category_id
+    WHERE discontinued = 0;
+```
+
 ## Procedury/funkcje
 
 1. **AddOrder** - dodaje zamówienie do bazy danych.
@@ -696,8 +711,8 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO Product_Parts
-    VALUES (@part_id,
-            @product_id,
+    VALUES (@product_id,
+            @part_id,
             @quantity)
 END;
 GO
@@ -817,7 +832,7 @@ END
 
 ```sql
 CREATE PROCEDURE AddIndividualCustomer
-    (@adress NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50),
+    (@address NVARCHAR(100), @city NVARCHAR(30), @region NVARCHAR(50),
      @country NVARCHAR(50), @postal_code NVARCHAR(10), @contact_email NVARCHAR(100),
      @phone nvarchar(15), @name NVARCHAR(100), @surname NVARCHAR(100),
      @title_of_courtesy NVARCHAR(10))
@@ -828,7 +843,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
             INSERT INTO Customers(address, city, region, country, postal_code, contact_email, phone)
-            VALUES(@adress, @city, @region, @country, @postal_code, @contact_email, @phone)
+            VALUES(@address, @city, @region, @country, @postal_code, @contact_email, @phone)
 
             DECLARE @customer_id INT = SCOPE_IDENTITY();
 
@@ -885,9 +900,9 @@ GO
 
 ```sql
 CREATE PROCEDURE LastOrdersFromClient
-    @CustomerID INT,
-    @DateFrom DATE,
-    @DateTo DATE
+    @customer_id INT,
+    @date_from DATE,
+    @date_to DATE
 AS
 BEGIN
     SELECT
@@ -904,8 +919,8 @@ BEGIN
     INNER JOIN Order_Details od
         ON o.order_id = od.order_id
     WHERE
-        c.customer_id = @CustomerID
-        AND o.order_date BETWEEN @DateFrom AND @DateTo
+        c.customer_id = @customerID
+        AND o.order_date BETWEEN @dateFrom AND @dateTo
     GROUP BY
         c.customer_id,
         o.order_id,
@@ -920,9 +935,9 @@ END;
 
 ```sql
 CREATE PROCEDURE TopProductGroups
-    @DateFrom DATE,
-    @DateTo DATE,
-    @CategoryID INT
+    @date_from DATE,
+    @date_to DATE,
+    @category_id INT
 AS
 BEGIN
     SELECT
@@ -944,8 +959,8 @@ BEGIN
     INNER JOIN Orders o ON o.order_id = od.order_id
 
     WHERE
-        p.category_id = @CategoryID
-        AND o.order_date BETWEEN @DateFrom AND @DateTo
+        p.category_id = @categoryID
+        AND o.order_date BETWEEN @dateFrom AND @dateTo
 
     GROUP BY
         ROLLUP (
@@ -1073,9 +1088,9 @@ GO
 16. **TopProductsWeek** - generuje listę najlepiej sprzedawanych produktów w zadanym tygodniu
 
 ```sql
-    CREATE PROCEDURE TopProductsWeek
-    @week_number INT,
-    @year INT
+CREATE PROCEDURE TopProductsWeek
+@week_number INT,
+@year INT
     AS
     BEGIN
         BEGIN TRY
@@ -1172,7 +1187,9 @@ BEGIN
 
         BEGIN TRANSACTION;
 
-        DECLARE @days_to_finish_order INT;
+        -- Jeśli produkt mógł być wydany bezpośrednio z magazynu, to
+        -- zostanie wydany następnego dnia roboczego.
+        DECLARE @days_to_finish_order INT = 1;
         DECLARE @estimated_date DATETIME;
         WITH line_occupancy AS (
             SELECT Assembly_Lines.assembly_line,
@@ -1285,9 +1302,9 @@ END;
 
 ```sql
 CREATE TRIGGER UpdateProductionAndWarehouseWhenNewOrder
-ON Order_Details
-AFTER INSERT
-AS
+    ON Order_Details
+    AFTER INSERT
+    AS
 BEGIN
     SET NOCOUNT ON;
     -- Jeżeli liczba zamówionych produktów jest mniejsza od liczby produktów na magzynie
@@ -1317,16 +1334,16 @@ GO
 3. **UpdatePartsInventory** - aktualizuje liczbę poszczególnych części na podstawie wykonanego zamówienia
 
 ```sql
-CREATE TRIGGER updatePartsInventory
-ON Production
-AFTER INSERT
-AS
+CREATE TRIGGER dbo.updatePartsInventory
+    ON Production
+    AFTER INSERT
+    AS
 BEGIN
     UPDATE p
-    SET p.units_in_stock = p.units_in_stock - (pp.quantity * i.quantity)
+        SET p.units_in_stock = p.units_in_stock - (pp.quantity * i.quantity)
     FROM Parts p
-    JOIN Product_Parts pp ON p.part_id = pp.part_id
-    JOIN inserted i ON pp.product_id = i.product_id;
+        JOIN Product_Parts pp ON p.part_id = pp.part_id
+        JOIN inserted i ON pp.product_id = i.product_id;
 END;
 ```
 
@@ -1355,3 +1372,38 @@ CREATE INDEX IX_Orders_DeliveryDate ON dbo.Orders(delivery_date);
 CREATE INDEX IX_Production_ProductionStartDate ON dbo.Production(production_startdate);
 CREATE INDEX IX_Production_ProductionEndDate ON dbo.Production(production_enddate);
 ```
+
+# 5. Uprawnienia
+
+Ponizej przedstawiamy przykładowy schemat rol w bazie danych.
+Ze względu na ograniczenia w uprawnieniach na bazie w domenie `db.manage` role
+nie zostały przetestowane w praktyce.
+
+**Pracownik**
+
+```sql
+CREATE ROLE employee AUTHORIZATION u_liskowsk;
+
+GRANT EXECUTE ON AddOrder TO employee;
+GRANT EXECUTE ON AddOrderDetail TO employee;
+GRANT EXECUTE ON AddCompanyCustomer TO employee;
+GRANT EXECUTE ON AddIndividualCustomer TO employee;
+GRANT EXECUTE ON AddPart TO employee;
+GRANT EXECUTE ON AddProduct TO employee;
+GRANT EXECUTE ON AddPartToProduct TO employee;
+GRANT EXECUTE ON EstimateOrderDate TO employee;
+```
+
+**Klient**
+
+```sql
+CREATE ROLE buyer AUTHORIZATION u_ogonowski;
+
+GRANT SELECT ON OBJECT::Products_Customers TO buyer;
+GRANT EXECUTE ON AddIndividualCustomer TO buyer;
+GRANT EXECUTE ON AddCompanyCustomer TO buyer;
+```
+
+**Administrator**
+
+Posiada dostęp do wszystkich procedur.
