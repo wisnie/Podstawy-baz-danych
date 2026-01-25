@@ -575,6 +575,21 @@ CREATE VIEW Individual_Clients_Orders AS
             ON ic.customer_id = cs.customer_id;
 ```
 
+4. **Products_Customers** - widok produktów z perspektywy klienta.
+
+```sql
+CREATE VIEW Products_Customers AS
+    SELECT product_id,
+           product_name,
+           category_name,
+           unit_price,
+           quantity_in_stock
+    FROM Products
+    INNER JOIN
+        dbo.Categories C ON Products.category_id = C.category_id
+    WHERE discontinued = 0;
+```
+
 ## Procedury/funkcje
 
 1. **AddOrder** - dodaje zamówienie do bazy danych.
@@ -1376,3 +1391,38 @@ CREATE INDEX IX_Orders_DeliveryDate ON dbo.Orders(delivery_date);
 CREATE INDEX IX_Production_ProductionStartDate ON dbo.Production(production_startdate);
 CREATE INDEX IX_Production_ProductionEndDate ON dbo.Production(production_enddate);
 ```
+
+# 5. Uprawnienia
+
+Ponizej przedstawiamy przykładowy schemat rol w bazie danych. 
+Ze względu na ograniczenia w uprawnieniach na bazie w domenie `db.manage` role
+nie zostały przetestowane w praktyce.
+
+**Pracownik**
+
+```sql
+CREATE ROLE employee AUTHORIZATION u_liskowsk;
+
+GRANT EXECUTE ON AddOrder TO employee;
+GRANT EXECUTE ON AddOrderDetail TO employee;
+GRANT EXECUTE ON AddCompanyCustomer TO employee;
+GRANT EXECUTE ON AddIndividualCustomer TO employee;
+GRANT EXECUTE ON AddPart TO employee;
+GRANT EXECUTE ON AddProduct TO employee;
+GRANT EXECUTE ON AddPartToProduct TO employee;
+GRANT EXECUTE ON EstimateOrderDate TO employee;
+```
+
+**Klient**
+
+```sql
+CREATE ROLE buyer AUTHORIZATION u_ogonowski;
+
+GRANT SELECT ON OBJECT::Products_Customers TO buyer;
+GRANT EXECUTE ON AddIndividualCustomer TO buyer;
+GRANT EXECUTE ON AddCompanyCustomer TO buyer;
+```
+
+**Administrator**
+
+Posiada dostęp do wszystkich procedur.
