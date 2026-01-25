@@ -1334,16 +1334,40 @@ GO
 3. **UpdatePartsInventory** - aktualizuje liczbę poszczególnych części na podstawie wykonanego zamówienia
 
 ```sql
-CREATE TRIGGER dbo.updatePartsInventory
-    ON Production
-    AFTER INSERT
-    AS
+CREATE TRIGGER update_parts_inventory
+ON Production
+AFTER INSERT
+AS
 BEGIN
+    SET NOCOUNT ON;
+
+    ;WITH used_parts AS (
+        SELECT 
+            pp.part_id,
+            SUM(pp.quantity * i.quantity) AS used
+        FROM Product_Parts pp
+        INNER JOIN inserted i ON i.product_id = pp.product_id
+        GROUP BY pp.part_id
+    ),
+    calc AS (
+        SELECT
+            p.part_id,
+            p.units_in_stock,
+            up.used,
+
+            IIF(p.units_in_stock < up.used, p.units_in_stock, up.used) AS to_deduct,
+
+            IIF(up.used > p.units_in_stock, up.used - p.units_in_stock, 0) AS to_order
+
+        FROM Parts p
+        JOIN used_parts up ON p.part_id = up.part_id
+    )
     UPDATE p
-        SET p.units_in_stock = p.units_in_stock - (pp.quantity * i.quantity)
+    SET 
+        p.units_in_stock = p.units_in_stock - c.to_deduct,
+        p.units_on_order = p.units_on_order + c.to_order
     FROM Parts p
-        JOIN Product_Parts pp ON p.part_id = pp.part_id
-        JOIN inserted i ON pp.product_id = i.product_id;
+    JOIN calc c ON p.part_id = c.part_id;
 END;
 ```
 
